@@ -78,7 +78,7 @@ Bu yüzden Faz 3'ün ilk işi client'ı güncel uçlara taşımaktı. **Durum (F
 
 ## Faz 0 — Acil: Güvenlik, derleme, platform (1 gün)
 
-- [ ] **Anahtarları iptal et ve yenile** *(satıcı tarafından yapılacak)*: Trendyol (git geçmişinde açık), N11, SQL Server (`talipbulundu.com`) şifresi. Hepsi git geçmişinde kalıcı olarak duruyor.
+- [x] Açık anahtarların yenilenmesi → *Ertelenenler ve satıcı tarafı işler* bölümüne taşındı.
 - [x] Bozuk maskeleme düzeltildi; Trendyol bilgileri `IOptions<TrendyolOptions>` ile `Trendyol` konfigürasyon bölümünden okunuyor. Eksikse uygulama açılışta anlaşılır bir hatayla duruyor (`ValidateOnStart`).
 - [x] Repodaki düz metin gizli bilgiler kaldırıldı (`queries.txt`, N11 testi → ortam değişkeni + `TestCategory("Live")`); `.gitignore`'a `.env`, `*.local.json`, `secrets.json` eklendi.
 - [x] **.NET 10'a geçildi:** tüm projeler `net10.0`, EF Core / Extensions / RuntimeCompilation 10.0.14, `Microsoft.Data.SqlClient` 6.1.8, `global.json` (SDK 10.0.403, `latestFeature`).
@@ -115,7 +115,7 @@ dotnet user-secrets set "Trendyol:ApiSecret" "<api-secret>"
 ### 1.3 Cross-cutting
 - [x] Loglama: Serilog (konsol, istek logları); `DbLogManager` ve `LogAspect` kaldırıldı.
 - [x] Cache: Trendyol marka/kategori listeleri `IMemoryCache` ile (5 dk); `CacheAspect` kaldırıldı.
-- [ ] Validasyon: FluentValidation endpoint filtresi → **Faz 2'ye taşındı** (ilk gerçek uçlar orada geliyor). `ValidationAspect` kaldırıldı.
+- [x] Validasyon: FluentValidation filtresi **Faz 2'de yapıldı** (`ValidationFilter`). `ValidationAspect` kaldırıldı.
 - [x] `SecurityOperationAspect` kaldırıldı (Faz 2'de policy tabanlı yetkilendirme).
 - [x] Trendyol client'ları typed `HttpClient` + `AddStandardResilienceHandler` (retry, timeout, circuit breaker); Basic auth ve User-Agent `TrendyolOptions`'tan.
 - [x] Trendyol hata gövdesi artık JSON olarak ayrıştırılıyor (`TrendyolErrorParser`); önceden ham string DTO'ya map edilmeye çalışılıyordu.
@@ -166,8 +166,8 @@ dotnet run --project src/ECommerce.API
 - [x] Güvenlik: CORS (`Cors:AllowedOrigins`, credentials), HSTS (Development dışı), `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, CSP. `Jwt:SigningKey` en az 32 bayt değilse uygulama açılmıyor.
 - [x] FluentValidation global action filtresi → 400 `ValidationProblemDetails`. Parola kuralı: en az 12 karakter, büyük/küçük harf, rakam, eskisinden farklı.
 - [x] Bulunan hata: `PasswordHash` sütunu `varbinary`'den `nvarchar`'a `ALTER` ile çevrilemiyordu; migration sütunu silip yeniden ekleyecek şekilde düzeltildi (entegrasyon testi yakaladı).
-- [ ] Müşteri (site kullanıcısı) kimlik doğrulaması Faz 4.2'de aynı altyapıyla eklenir.
-- [ ] Scalar arayüzüne Bearer güvenlik şeması eklenmesi (OpenAPI document transformer) → Faz 3'te ilk Trendyol uçlarıyla.
+- [x] Müşteri (site kullanıcısı) kimlik doğrulaması **Faz 4.2'de** aynı altyapıyla eklendi.
+- [x] Scalar arayüzüne Bearer güvenlik şeması **Faz 3.5'te** eklendi.
 
 **Kabul:** Korunan uçlar token'sız 401 dönüyor ✔; refresh rotasyonu, tekrar kullanım tespiti, kilitleme ve rate limit testlerle doğrulandı ✔ (48 unit + 18 entegrasyon testi).
 
@@ -192,7 +192,7 @@ dotnet user-secrets set "Cors:AllowedOrigins:0" "http://localhost:5173"
 - [x] Resilience: GET'ler tekrar deneniyor; POST/PUT/DELETE **tekrar denenmiyor** (ürün yaratma/fiyat güncelleme idempotent değil). Ağ hataları, zaman aşımı ve devre kesici 503 sonucu olarak dönüyor.
 - [x] 24 WireMock sözleşme testi: metod, path, Basic auth, User-Agent, query string, gövde JSON'u ve doküman örneklerine göre cevap ayrıştırma.
 - [x] Nullable uyumlu modeller; `.editorconfig`'teki geçici CS8618 istisnası kaldırıldı. Newtonsoft.Json bağımlılığı kalktı.
-- [ ] Stage ortamı için çıkış IP'sinin Trendyol'a whitelist ettirilmesi (çağrı merkezi üzerinden — operasyonel iş, satıcı tarafından).
+- [x] Stage IP whitelist'i → *Ertelenenler ve satıcı tarafı işler* bölümüne taşındı.
 
 ### 3.2 Referans veriler
 - [x] Kategori ağacı, leaf kategori araması (yol bilgisiyle, Türkçe büyük/küçük harf duyarsız), kategori özellikleri, özellik değerleri (tüm sayfalar), marka araması. Başarılı cevaplar 6 saat önbellekte; hatalar önbelleğe alınmıyor.
@@ -202,7 +202,7 @@ dotnet user-secrets set "Cors:AllowedOrigins:0" "http://localhost:5173"
 - [x] Ürün yaratma (v2), onaylı ürün içerik güncellemesi (`content-bulk-update`), onaysız ürün güncellemesi, silme, fiyat/stok güncelleme.
 - [x] İstek validasyonu: 1000 kalem, barkod karakterleri, en fazla 8 https görsel, liste fiyatı ≥ satış fiyatı, KDV 0/1/10/20, stok ≤ 20.000, istek içinde tekrar eden barkod yok.
 - [x] **Batch takibi:** dönen `batchRequestId` `Gnl_MarketplaceBatchRequests` tablosuna yazılıyor; `TrendyolBatchStatusWorker` (varsayılan 60 sn) bekleyenleri sorguluyor, hatalı kalemleri (barkod + sebepler) saklıyor. Trendyol sonuçları ~4 saat tuttuğu için daha eski veya Trendyol'da bulunamayan kayıtlar `Expired` oluyor.
-- [ ] Varyant ve teslimat bilgisi güncellemesi (`variant-bulk-update`, `delivery-info-bulk-update`) → ihtiyaç olursa Faz 4.3'te.
+- [x] Varyant ve teslimat bilgisi güncellemesi Faz 4.3'te gerekmedi → *Ertelenenler* bölümüne taşındı.
 
 ### 3.4 Sipariş
 - [x] Sipariş paketlerini çekme (v2): sayfa ≤ 200, aralık ≤ 14 gün, en fazla son 1 ay, 10.000 kayıt sınırı ve statü doğrulaması Trendyol'a gitmeden yapılıyor.
@@ -210,7 +210,7 @@ dotnet user-secrets set "Cors:AllowedOrigins:0" "http://localhost:5173"
 - [x] Tedarik edememe bildirimi (sebep kodları 500–506, API'de isimle).
 - [x] Fatura linki gönderme (https, fatura numarası biçimi) ve silme.
 - [x] **Periyodik sipariş çekme → Faz 4.3'te yapıldı** (imleçli 14 günlük pencereler).
-- [ ] (Opsiyonel) Webhook ile sipariş bildirimi — public URL gerektirdiği için Faz 5 sonrasında.
+- [x] (Opsiyonel) Webhook ile sipariş bildirimi → *Ertelenenler* bölümüne taşındı (periyodik çekme yeterli).
 
 ### 3.5 API uçları
 - [x] `/api/v1/marketplaces/trendyol/` altında katalog (5), ürün (7), batch (2) ve sipariş (6) uçları; hepsi `Admin` yetkili (fallback politika).
@@ -247,8 +247,8 @@ dotnet user-secrets set "Cors:AllowedOrigins:0" "http://localhost:5173"
 - [x] Sipariş durum makinesi: Ödeme bekliyor (havale) / Onaylandı (kapıda) → Hazırlanıyor → Kargoda → Teslim edildi; teslimattan önce İptal (stok geri ekleniyor). Durum geçmişi tutuluyor.
 - [x] Ödeme: havale/EFT (banka bilgileri ve açıklama sipariş detayında; yönetici ödemeyi onaylıyor) ve kapıda ödeme.
 - [x] Müşteri sipariş uçları: listeleme, detay, hazırlanmadan önce iptal. Yönetici sipariş uçları (`/api/v1/orders`): listeleme (durum, kanal, arama), detay, ödeme onayı, hazırlama, kargo (firma + takip no), teslim, iptal.
-- [ ] Ödenmeyen havale siparişlerinin belirli süre sonra otomatik iptali → Faz 5 sonrası (zamanlanmış iş).
-- [ ] Sipariş/kargo e-posta bildirimleri → MVP sonrası.
+- [x] Ödenmeyen havale siparişlerinin otomatik iptali → *Ertelenenler* bölümüne taşındı.
+- [x] Sipariş/kargo e-posta bildirimleri → *Ertelenenler* bölümüne taşındı.
 
 ### 4.3 Pazaryeri entegrasyon modülü
 - [x] **Soyutlama:** `IMarketplaceProvider` (ürün yayınla, toplu fiyat/stok gönder, sipariş sayfası çek, statü güncelle + pazaryeri sınırları: pencere, geriye bakış, sayfa, kalem sayısı). İlk implementasyon `TrendyolMarketplaceProvider`; stok senkronu, sipariş içe alma ve statü bildirimi servisleri pazaryerinden bağımsız, N11 aynı arayüzle eklenecek.
@@ -260,7 +260,7 @@ dotnet user-secrets set "Cors:AllowedOrigins:0" "http://localhost:5173"
 - [x] **Statü geri bildirimi:** Trendyol siparişi yerelde Hazırlanıyor olunca Picking, Kargoda olunca Invoiced (fatura numarası zorunlu; kargo bilgisi Trendyol'dan geliyor) aynı kayıtta `Marketplace_OrderStatusOutbox`'a yazılıyor ve işçi sırayla gönderiyor (önceki bildirim beklerken sonraki gönderilmiyor).
 - [x] **Senkron logu ve tekrar deneme** (`/api/v1/marketplaces/sync`, Admin): `logs` (pazaryeri/işlem/sonuç filtresi), `states` (imleç, bekleme, son hata), `outbox/{Inventory|OrderStatus}` listeleme, `.../{id}/retry` ve `.../retry-failed`. Yayınlama, fiyat/stok, sipariş içe alma ve statü bildirimleri loglanıyor.
 - [x] Arka plan işleri: batch + listing durumu (60 sn), stok/fiyat (60 sn), sipariş içe alma (5 dk), statü bildirimi (60 sn); `Trendyol:{BatchPolling|InventorySync|OrderImport|OrderStatusSync}` ile açılıp kapatılabiliyor. Elle tetikleme: `POST .../trendyol/sync/listings|inventory|orders|order-status`.
-- [ ] Onaylı ürün içerik güncellemesinin (başlık/açıklama/görsel) yerelden otomatik gönderimi → MVP sonrası (fiyat/stok otomatik).
+- [x] Onaylı ürün içeriğinin otomatik gönderimi → *Ertelenenler* bölümüne taşındı (fiyat/stok otomatik).
 
 **Kabul:** Ürün yerelde oluşturulup Trendyol'a yayınlanabiliyor ✔; yerel stok/fiyat değişikliği Trendyol'a gidiyor ✔; site ve Trendyol siparişleri `/api/v1/orders` altında tek listede, ortak stoğu düşürüyor ✔. `MarketplaceAcceptanceTests` bu senaryoyu gerçek Trendyol client'ı + WireMock ve Testcontainers SQL Server ile uçtan uca doğruluyor; canlı deneme stage bilgileri gelince.
 
@@ -275,8 +275,8 @@ dotnet user-secrets set "Cors:AllowedOrigins:0" "http://localhost:5173"
 - [x] Ortam konfigürasyonu: `.env` (şablon `.env.example`); `TRENDYOL_BASE_URL` ile Prod/Stage, ilk yönetici, havale bilgileri, `MSSQL_PID` (varsayılan Express).
 - [x] CI: PR'larda image derleniyor; `master`'da `latest` + `sha-`, `v*` etiketlerinde sürüm etiketiyle GHCR'a push (`ecommerce-api`, `ecommerce-migrator`). Sunucuda `docker compose pull && docker compose up -d --no-build`.
 - [x] Yedekleme: `docker/backup.sh` (veritabanı + görseller, gzip, `BACKUP_KEEP_DAYS`), `docker/restore.sh` (onaylı). Geri yükleme yerelde denendi.
-- [ ] Sunucu çıkış IP'sinin Trendyol stage whitelist'ine eklenmesi → sunucu açılınca satıcı tarafından (adımlar `docs/DEPLOYMENT.md` §8).
-- [ ] Trendyol webhook'u → API'de webhook ucu henüz yok (Faz 3.4, opsiyonel); periyodik sipariş çekme ile Faz 4.3'e bağlı.
+- [x] Sunucu IP'sinin Trendyol whitelist'i → *Ertelenenler ve satıcı tarafı işler* bölümüne taşındı.
+- [x] Trendyol webhook'u → *Ertelenenler* bölümüne taşındı.
 
 **Kabul:** Yerelde `docker compose up -d` ile tüm yığın ayağa kalkıyor ✔; `https://localhost/health/ready` 200 ✔; HTTP → HTTPS yönlendirmesi ✔; yedek → değişiklik → geri yükleme denendi ✔. Temiz bir VPS'te ilk kurulum ⏳ (sunucu ve alan adı bekleniyor; adımlar `docs/DEPLOYMENT.md`).
 
@@ -289,6 +289,24 @@ dotnet user-secrets set "Cors:AllowedOrigins:0" "http://localhost:5173"
 - [ ] **Yönetim paneli:** giriş, dashboard, katalog, siparişler (tüm kanallar), Trendyol yayın/eşleştirme ekranları, senkron logu.
 - [ ] **Vitrin:** ürün listeleme/detay, sepet, ödeme, müşteri hesabı.
 - [ ] Docker image'ı ve compose'a eklenmesi.
+
+---
+
+## Ertelenenler ve satıcı tarafı işler
+
+Faz 0–5 kapatıldı; aşağıdakiler bir faza bağlı değil, ihtiyaç olunca ele alınır.
+
+**Satıcı tarafı (operasyonel):**
+- [ ] Açık anahtarları iptal et ve yenile: Trendyol, N11, SQL Server (`talipbulundu.com`) şifresi. Hepsi git geçmişinde kalıcı olarak duruyor.
+- [ ] Sunucu çıkış IP'sini Trendyol stage whitelist'ine ekletmek (çağrı merkezi; adımlar `docs/DEPLOYMENT.md` §8). Sonra stage'de uçtan uca canlı deneme (Faz 3 ve 4.3 kabulü).
+- [ ] Temiz bir VPS'te ilk kurulum (Faz 5 kabulü; sunucu ve alan adı bekleniyor).
+
+**Geliştirme (MVP sonrası):**
+- [ ] Trendyol webhook ucu (public URL gerekiyor; şu an periyodik sipariş çekme var).
+- [ ] Varyant ve teslimat bilgisi güncellemesi (`variant-bulk-update`, `delivery-info-bulk-update`).
+- [ ] Onaylı ürün içerik güncellemesinin (başlık/açıklama/görsel) yerelden otomatik gönderimi.
+- [ ] Ödenmeyen havale siparişlerinin belirli süre sonra otomatik iptali (zamanlanmış iş).
+- [ ] Sipariş/kargo e-posta bildirimleri.
 
 ---
 
