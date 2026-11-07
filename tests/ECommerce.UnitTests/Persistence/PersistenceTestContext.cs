@@ -10,7 +10,7 @@ public static class PersistenceTestContext
     {
         var options = new DbContextOptionsBuilder<ECommerceContext>()
             .UseInMemoryDatabase(databaseName ?? Guid.NewGuid().ToString())
-            .AddInterceptors(new AuditSaveChangesInterceptor(clock))
+            .AddInterceptors(new InventoryOutboxInterceptor(), new AuditSaveChangesInterceptor(clock))
             .Options;
 
         return new ECommerceContext(options);

@@ -14,6 +14,7 @@ public static class ResultActionResults
         {
             ErrorKind.NotFound => StatusCodes.Status404NotFound,
             ErrorKind.Conflict => StatusCodes.Status409Conflict,
+            ErrorKind.Unavailable => StatusCodes.Status502BadGateway,
             _ => StatusCodes.Status400BadRequest
         };
 

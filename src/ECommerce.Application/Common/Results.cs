@@ -9,7 +9,8 @@ public enum ErrorKind
 {
     Validation,
     NotFound,
-    Conflict
+    Conflict,
+    Unavailable
 }
 
 public sealed record AppError(ErrorKind Kind, string Message);

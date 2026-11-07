@@ -28,7 +28,8 @@ public record CheckoutRequest(int AddressId, PaymentMethod PaymentMethod, string
 
 public record CheckoutPreviewDto(decimal Subtotal, decimal ShippingFee, decimal PaymentFee, decimal Total);
 
-public record ShipOrderRequest(string CargoProvider, string TrackingNumber);
+/// <summary>Pazaryeri siparişinde kargo bilgisi boş bırakılabilir (pazaryerinden gelir), fatura numarası zorunludur.</summary>
+public record ShipOrderRequest(string? CargoProvider, string? TrackingNumber, string? InvoiceNumber = null);
 
 public record CancelOrderRequest(string Reason);
 

@@ -36,7 +36,8 @@ public sealed record OrderLineInput(
     string? Sku,
     decimal UnitPrice,
     int Quantity,
-    int VatRate);
+    int VatRate,
+    long? ExternalLineId = null);
 
 /// <summary>
 /// Sipariş aggregate'i ve durum makinesi. Satırlar sipariş anındaki ürün bilgisinin kopyasıdır.
@@ -78,6 +79,8 @@ public class Order : AggregateRoot<int>
 
     public string? TrackingNumber { get; private set; }
 
+    public string? InvoiceNumber { get; private set; }
+
     public string? CancelReason { get; private set; }
 
     public DateTime PlacedAt { get; private set; }
@@ -109,6 +112,69 @@ public class Order : AggregateRoot<int>
         order.SetStatus(paymentMethod == PaymentMethod.BankTransfer ? OrderStatus.PendingPayment : OrderStatus.Confirmed, now, null);
         return order;
     }
+
+    /// <summary>Pazaryerinden gelen siparişi içe alır; ödeme pazaryerinde yapıldığı için onaylı başlar.</summary>
+    public static Order ImportMarketplaceOrder(
+        string orderNumber, OrderChannel channel, string externalReference, string customerEmail, string customerName,
+        OrderAddress address, IReadOnlyList<OrderLineInput> lines, DateTime placedAt, string? cargoProvider = null, string? trackingNumber = null)
+    {
+        if (channel == OrderChannel.Web)
+            throw new DomainException("Pazaryeri siparişi web kanalıyla içe alınamaz.");
+
+        var order = Create(orderNumber, channel, externalReference, customerEmail, customerName, address, PaymentMethod.Marketplace, lines, 0m, 0m, placedAt);
+        order.PaidAt = placedAt;
+        order.CargoProvider = cargoProvider;
+        order.TrackingNumber = trackingNumber;
+        order.SetStatus(OrderStatus.Confirmed, placedAt, "Pazaryerinden içe alındı.");
+        return order;
+    }
+
+    /// <summary>
+    /// Pazaryerindeki durumu yansıtır; yalnızca ileri yönde ilerler. Durum değiştiyse true döner.
+    /// </summary>
+    public bool ApplyMarketplaceStatus(OrderStatus target, string? cargoProvider, string? trackingNumber, DateTime now)
+    {
+        if (Channel == OrderChannel.Web)
+            throw new DomainException("Web siparişinin durumu pazaryerinden güncellenemez.");
+
+        if (Status is OrderStatus.Cancelled or OrderStatus.Delivered || target == Status)
+            return false;
+
+        if (target == OrderStatus.Cancelled)
+        {
+            if (Status == OrderStatus.Shipped)
+                return false;
+            CancelReason = "Pazaryerinde iptal edildi.";
+            CancelledAt = now;
+            SetStatus(OrderStatus.Cancelled, now, CancelReason);
+            return true;
+        }
+
+        if (Rank(target) <= Rank(Status))
+            return false;
+
+        if (target is OrderStatus.Shipped or OrderStatus.Delivered)
+        {
+            CargoProvider = cargoProvider ?? CargoProvider;
+            TrackingNumber = trackingNumber ?? TrackingNumber;
+            ShippedAt ??= now;
+        }
+        if (target == OrderStatus.Delivered)
+            DeliveredAt = now;
+
+        SetStatus(target, now, null);
+        return true;
+    }
+
+    private static int Rank(OrderStatus status) => status switch
+    {
+        OrderStatus.PendingPayment => 0,
+        OrderStatus.Confirmed => 1,
+        OrderStatus.Preparing => 2,
+        OrderStatus.Shipped => 3,
+        OrderStatus.Delivered => 4,
+        _ => -1
+    };
 
     protected static Order Create(
         string orderNumber, OrderChannel channel, string? externalReference, string customerEmail, string customerName, OrderAddress address,
@@ -151,14 +217,23 @@ public class Order : AggregateRoot<int>
         SetStatus(OrderStatus.Preparing, now, null);
     }
 
-    public void Ship(string cargoProvider, string trackingNumber, DateTime now)
+    /// <summary>
+    /// Kargoya verir. Pazaryeri siparişinde kargo pazaryerinin anlaşmalı firmasıdır (boşsa içe alınan değer kalır)
+    /// ve pazaryerine bildirim için fatura numarası zorunludur.
+    /// </summary>
+    public void Ship(string? cargoProvider, string? trackingNumber, DateTime now, string? invoiceNumber = null)
     {
         Require(OrderStatus.Preparing, "Yalnızca hazırlanan sipariş kargoya verilebilir.");
-        if (string.IsNullOrWhiteSpace(cargoProvider) || string.IsNullOrWhiteSpace(trackingNumber))
+        var cargo = string.IsNullOrWhiteSpace(cargoProvider) ? CargoProvider : cargoProvider.Trim();
+        var tracking = string.IsNullOrWhiteSpace(trackingNumber) ? TrackingNumber : trackingNumber.Trim();
+        if (Channel == OrderChannel.Web && (string.IsNullOrWhiteSpace(cargoProvider) || string.IsNullOrWhiteSpace(trackingNumber)))
             throw new DomainException("Kargo firması ve takip numarası girilmelidir.");
+        if (Channel != OrderChannel.Web && string.IsNullOrWhiteSpace(invoiceNumber))
+            throw new DomainException("Pazaryeri siparişi için fatura numarası girilmelidir.");
 
-        CargoProvider = cargoProvider.Trim();
-        TrackingNumber = trackingNumber.Trim();
+        CargoProvider = cargo;
+        TrackingNumber = tracking;
+        InvoiceNumber = string.IsNullOrWhiteSpace(invoiceNumber) ? InvoiceNumber : invoiceNumber.Trim();
         ShippedAt = now;
         SetStatus(OrderStatus.Shipped, now, $"{CargoProvider} - {TrackingNumber}");
     }
@@ -212,6 +287,7 @@ public class OrderLine : AggregateRoot<int>
         UnitPrice = input.UnitPrice;
         Quantity = input.Quantity;
         VatRate = input.VatRate;
+        ExternalLineId = input.ExternalLineId;
         LineTotal = input.UnitPrice * input.Quantity;
     }
 
@@ -236,6 +312,9 @@ public class OrderLine : AggregateRoot<int>
     public int VatRate { get; private set; }
 
     public decimal LineTotal { get; private set; }
+
+    /// <summary>Pazaryerindeki satır numarası; durum bildirimlerinde gerekir.</summary>
+    public long? ExternalLineId { get; private set; }
 }
 
 public class OrderStatusChange : AggregateRoot<int>

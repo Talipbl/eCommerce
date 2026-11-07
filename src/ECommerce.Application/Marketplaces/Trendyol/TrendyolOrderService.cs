@@ -10,7 +10,8 @@ public record OrderPackagesQuery(
     string? OrderNumber,
     long? ShipmentPackageId,
     int Page = 0,
-    int Size = 50);
+    int Size = 50,
+    string OrderByDirection = "DESC");
 
 public record PackageLinesRequest(IReadOnlyList<PackageLine> Lines);
 
@@ -59,7 +60,7 @@ public class TrendyolOrderService(ITrendyolOrderClient client, TimeProvider cloc
             Status = query.Status,
             OrderNumber = query.OrderNumber,
             ShipmentPackageId = query.ShipmentPackageId,
-            OrderByDirection = "DESC",
+            OrderByDirection = query.OrderByDirection,
             Page = query.Page,
             Size = query.Size
         }, cancellationToken);

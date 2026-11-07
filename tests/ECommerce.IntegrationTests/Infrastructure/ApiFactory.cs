@@ -23,6 +23,9 @@ public class ApiFactory(
         builder.UseSetting("Trendyol:ApiKey", "test-key");
         builder.UseSetting("Trendyol:ApiSecret", "test-secret");
         builder.UseSetting("Trendyol:BatchPolling:Enabled", "false");
+        builder.UseSetting("Trendyol:InventorySync:Enabled", "false");
+        builder.UseSetting("Trendyol:OrderImport:Enabled", "false");
+        builder.UseSetting("Trendyol:OrderStatusSync:Enabled", "false");
         builder.UseSetting("Jwt:SigningKey", SigningKey);
         builder.UseSetting("RateLimiting:Auth:PermitLimit", "1000");
 

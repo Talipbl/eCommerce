@@ -4,6 +4,7 @@ using ECommerce.Application.Shopping;
 using ECommerce.Catalog;
 using ECommerce.Core.Domain;
 using ECommerce.Customers;
+using ECommerce.Marketplaces;
 using ECommerce.Ordering;
 using ECommerce.Persistence;
 using ECommerce.Shopping;
@@ -36,7 +37,7 @@ public sealed class OrderServiceTests : IAsyncLifetime
     private CartService Carts => new(new EfRepository<Cart>(_db.Context), _db.Products, _db.Variants, _db.Context, _db.Media);
     private CheckoutService Checkout => new(new EfRepository<Cart>(_db.Context), new EfRepository<Customer>(_db.Context), _db.Products, _db.Variants,
         Orders, _db.Context, Microsoft.Extensions.Options.Options.Create(Options), _clock);
-    private OrderManagementService Management => new(Orders, _db.Products, _db.Variants, _db.Context, Microsoft.Extensions.Options.Options.Create(Options), _clock);
+    private OrderManagementService Management => new(Orders, _db.Products, _db.Variants, new EfRepository<MarketplaceOrderStatusUpdate>(_db.Context), _db.Context, Microsoft.Extensions.Options.Options.Create(Options), _clock);
 
     public async ValueTask InitializeAsync()
     {
@@ -161,6 +162,26 @@ public sealed class OrderServiceTests : IAsyncLifetime
         (await Management.ListAsync(new OrderAdminQuery(OrderStatus.Shipped, null, null, 0, 20), Ct)).TotalElements.ShouldBe(1);
         (await Management.ListAsync(new OrderAdminQuery(null, null, "ali@", 0, 20), Ct)).TotalElements.ShouldBe(1);
         await Should.ThrowAsync<DomainException>(() => Management.CancelAsync(placed.Id, "Vazgeçildi", Ct));
+        (await _db.Context.MarketplaceOrderStatusUpdates.CountAsync(Ct)).ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task Preparing_and_shipping_a_trendyol_order_queues_picking_and_invoiced_feedback()
+    {
+        var order = Order.ImportMarketplaceOrder("TY3330000001", OrderChannel.Trendyol, "3330000001", "pf@trendyolmail.com", "Ali Veli",
+            new OrderAddress("Ali Veli", "0555", "İstanbul", "Kadıköy", "Moda", null),
+            [new OrderLineInput(_variantId, _product.Id, "Tişört", null, "BRK-1", null, 150m, 1, 20, ExternalLineId: 555)],
+            _clock.GetUtcNow().UtcDateTime, "Trendyol Express", "7330000000001");
+        await _db.AddAsync(order);
+
+        await Management.StartPreparingAsync(order.Id, Ct);
+        await Should.ThrowAsync<DomainException>(() => Management.ShipAsync(order.Id, new ShipOrderRequest(null, null), Ct));
+        var shipped = (await Management.ShipAsync(order.Id, new ShipOrderRequest(null, null, "GIB2026000000001"), Ct)).Value!;
+
+        shipped.TrackingNumber.ShouldBe("7330000000001");
+        var updates = await _db.Context.MarketplaceOrderStatusUpdates.OrderBy(u => u.Id).ToListAsync(Ct);
+        updates.Select(u => u.Action).ShouldBe([MarketplaceOrderAction.Picking, MarketplaceOrderAction.Invoiced]);
+        updates.ShouldAllBe(u => u.OrderId == order.Id && u.ExternalReference == "3330000001" && u.Status == OutboxStatus.Pending);
     }
 
     [Fact]

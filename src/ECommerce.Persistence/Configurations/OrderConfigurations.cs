@@ -20,6 +20,7 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         entity.Property(e => e.Note).HasMaxLength(500);
         entity.Property(e => e.CargoProvider).HasMaxLength(100);
         entity.Property(e => e.TrackingNumber).HasMaxLength(100);
+        entity.Property(e => e.InvoiceNumber).HasMaxLength(50);
         entity.Property(e => e.CancelReason).HasMaxLength(500);
         entity.Property(e => e.Subtotal).HasPrecision(18, 2);
         entity.Property(e => e.ShippingFee).HasPrecision(18, 2);

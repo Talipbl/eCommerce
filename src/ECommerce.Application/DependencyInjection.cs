@@ -4,6 +4,7 @@ using ECommerce.Application.Ordering;
 using ECommerce.Application.Shopping;
 using ECommerce.Customers;
 using Microsoft.AspNetCore.Identity;
+using ECommerce.Application.Marketplaces;
 using ECommerce.Application.Marketplaces.Trendyol;
 using FluentValidation;
 using Microsoft.Extensions.Configuration;
@@ -43,6 +44,13 @@ public static class DependencyInjection
         services.AddScoped<ITrendyolProductService, TrendyolProductService>();
         services.AddScoped<ITrendyolBatchService, TrendyolBatchService>();
         services.AddScoped<ITrendyolOrderService, TrendyolOrderService>();
+        services.AddScoped<ITrendyolListingService, TrendyolListingService>();
+        services.AddScoped<IMarketplaceProvider, TrendyolMarketplaceProvider>();
+
+        services.AddScoped<IMarketplaceInventorySyncService, MarketplaceInventorySyncService>();
+        services.AddScoped<IMarketplaceOrderImportService, MarketplaceOrderImportService>();
+        services.AddScoped<IMarketplaceOrderStatusSyncService, MarketplaceOrderStatusSyncService>();
+        services.AddScoped<IMarketplaceSyncAdminService, MarketplaceSyncAdminService>();
 
         return services;
     }

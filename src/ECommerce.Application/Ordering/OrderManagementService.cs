@@ -1,6 +1,7 @@
 using ECommerce.Application.Common;
 using ECommerce.Catalog;
 using ECommerce.Core.Persistence;
+using ECommerce.Marketplaces;
 using ECommerce.Ordering;
 using FluentValidation;
 using Microsoft.Extensions.Options;
@@ -26,6 +27,7 @@ public class OrderManagementService(
     IRepository<Order> orders,
     IRepository<Product> products,
     IRepository<ProductVariant> variants,
+    IRepository<MarketplaceOrderStatusUpdate> statusUpdates,
     IUnitOfWork unitOfWork,
     IOptions<CheckoutOptions> options,
     TimeProvider clock) : IOrderManagementService
@@ -74,10 +76,25 @@ public class OrderManagementService(
         ChangeAsync(id, o => o.ConfirmPayment(Now), cancellationToken);
 
     public Task<Result<OrderDto>> StartPreparingAsync(int id, CancellationToken cancellationToken = default) =>
-        ChangeAsync(id, o => o.StartPreparing(Now), cancellationToken);
+        ChangeAsync(id, o =>
+        {
+            o.StartPreparing(Now);
+            NotifyMarketplace(o, MarketplaceOrderAction.Picking);
+        }, cancellationToken);
 
     public Task<Result<OrderDto>> ShipAsync(int id, ShipOrderRequest request, CancellationToken cancellationToken = default) =>
-        ChangeAsync(id, o => o.Ship(request.CargoProvider, request.TrackingNumber, Now), cancellationToken);
+        ChangeAsync(id, o =>
+        {
+            o.Ship(request.CargoProvider, request.TrackingNumber, Now, request.InvoiceNumber);
+            NotifyMarketplace(o, MarketplaceOrderAction.Invoiced);
+        }, cancellationToken);
+
+    // Pazaryeri siparişindeki yerel ilerleme aynı kayıtta outbox'a yazılır; işçi pazaryerine bildirir.
+    private void NotifyMarketplace(Order order, MarketplaceOrderAction action)
+    {
+        if (MarketplaceNames.ForChannel(order.Channel) is { } marketplace)
+            statusUpdates.Add(MarketplaceOrderStatusUpdate.For(order, action, marketplace));
+    }
 
     public Task<Result<OrderDto>> DeliverAsync(int id, CancellationToken cancellationToken = default) =>
         ChangeAsync(id, o => o.Deliver(Now), cancellationToken);
@@ -135,8 +152,9 @@ public class ShipOrderRequestValidator : AbstractValidator<ShipOrderRequest>
 {
     public ShipOrderRequestValidator()
     {
-        RuleFor(x => x.CargoProvider).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.TrackingNumber).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.CargoProvider).MaximumLength(100);
+        RuleFor(x => x.TrackingNumber).MaximumLength(100);
+        RuleFor(x => x.InvoiceNumber).MaximumLength(50);
     }
 }
 

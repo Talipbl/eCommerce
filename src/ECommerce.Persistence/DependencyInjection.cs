@@ -18,10 +18,11 @@ public static class DependencyInjection
 
         services.TryAddSingleton(TimeProvider.System);
         services.AddScoped<AuditSaveChangesInterceptor>();
+        services.AddSingleton<InventoryOutboxInterceptor>();
 
         services.AddDbContext<ECommerceContext>((provider, options) => options
             .UseSqlServer(connectionString, sql => sql.MigrationsHistoryTable("__EFMigrationsHistory", "dbo"))
-            .AddInterceptors(provider.GetRequiredService<AuditSaveChangesInterceptor>()));
+            .AddInterceptors(provider.GetRequiredService<InventoryOutboxInterceptor>(), provider.GetRequiredService<AuditSaveChangesInterceptor>()));
 
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<ECommerceContext>());
         services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));

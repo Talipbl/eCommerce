@@ -209,7 +209,7 @@ dotnet user-secrets set "Cors:AllowedOrigins:0" "http://localhost:5173"
 - [x] Paket statüsü: Picking → Invoiced (fatura numarasıyla).
 - [x] Tedarik edememe bildirimi (sebep kodları 500–506, API'de isimle).
 - [x] Fatura linki gönderme (https, fatura numarası biçimi) ve silme.
-- [ ] **Periyodik sipariş çekme → Faz 4.3'e taşındı:** siparişlerin yerel veritabanına alınmasıyla birlikte yapılacak; Faz 3'te siparişler canlı olarak Trendyol'dan listeleniyor.
+- [x] **Periyodik sipariş çekme → Faz 4.3'te yapıldı** (imleçli 14 günlük pencereler).
 - [ ] (Opsiyonel) Webhook ile sipariş bildirimi — public URL gerektirdiği için Faz 5 sonrasında.
 
 ### 3.5 API uçları
@@ -251,16 +251,18 @@ dotnet user-secrets set "Cors:AllowedOrigins:0" "http://localhost:5173"
 - [ ] Sipariş/kargo e-posta bildirimleri → MVP sonrası.
 
 ### 4.3 Pazaryeri entegrasyon modülü
-- [ ] Soyutlama: `IMarketplaceProvider` (ürün yayınla, fiyat/stok gönder, sipariş çek, statü güncelle); Trendyol ilk implementasyon. N11 ileride aynı arayüze eklenir.
-- [ ] **Ürün eşleştirme:** yerel ürün/varyant ↔ Trendyol barkodu; yerel kategori ↔ Trendyol kategorisi + özellik eşlemesi.
-- [ ] **Yayınlama:** yerel üründen Trendyol ürün isteği üretme; durum (bekliyor / onaylandı / hatalı) takibi.
-- [ ] **Tek stok ve fiyat:** yerelde stok/fiyat değişince outbox kaydı → arka plan işçisi Trendyol'a toplu gönderir (rate limit'e uygun).
-- [ ] **Sipariş içe alma:** Trendyol siparişleri yerel siparişe dönüştürülür (kanal = Trendyol); stok düşer; idempotent (aynı paket iki kez işlenmez).
-- [ ] Periyodik sipariş çekme işi (Faz 3.4'ten taşındı): son çekim zamanından itibaren 14 günlük pencerelerle, `PackageLastModifiedDate`'e göre.
-- [ ] **Statü geri bildirimi:** yerelde "Hazırlanıyor/Kargoda" olan Trendyol siparişi için Trendyol'a Picking/Invoiced gönderilir.
-- [ ] Senkron logu ve tekrar deneme uçları.
+- [x] **Soyutlama:** `IMarketplaceProvider` (ürün yayınla, toplu fiyat/stok gönder, sipariş sayfası çek, statü güncelle + pazaryeri sınırları: pencere, geriye bakış, sayfa, kalem sayısı). İlk implementasyon `TrendyolMarketplaceProvider`; stok senkronu, sipariş içe alma ve statü bildirimi servisleri pazaryerinden bağımsız, N11 aynı arayüzle eklenecek.
+- [x] **Eşleştirme:** yerel kategori ↔ Trendyol leaf kategorisi (Trendyol ağacından doğrulanıyor), yerel marka ↔ Trendyol markası, varyant ↔ barkod. **Özellik eşlemesi** (`PUT .../mappings/categories/{id}/attributes`): sabit (ürün seviyesi) değerler ve varyant özelliği → Trendyol değer numarası/serbest değer; özellik ve değer numaraları Trendyol kategorisinden, serbest değer izni `allowCustom`'dan doğrulanıyor.
+- [x] **Yayınlama** (`POST .../listings/{productId}`): aktif varyantlardan Trendyol v2 ürün isteği üretiliyor; özellikler kategori eşlemesinden çözülüyor, istekte gelenler aynı özellik numarasında eşlemeyi ezer. Zorunlu özellik eksikse Trendyol'a gitmeden hata. Durum: Gönderildi → (batch sonucu, `Gnl_MarketplaceBatchRequests`) Onay bekliyor / Hatalı → Yayında / Reddedildi + sebepler.
+- [x] **Tek stok ve fiyat:** varyantın fiyat/stok/aktiflik değişikliği `InventoryOutboxInterceptor` ile aynı kayıtta outbox'a yazılıyor; işçi kabul edilmiş ürünleri 1000'lik paketlerle gönderiyor. 429'da pazaryeri 60 sn beklemeye alınıyor (deneme harcanmaz), geçici hatada artan aralıkla en fazla 5 deneme, Trendyol'un reddettiği istek hata mesajıyla `Failed`.
+- [x] **Sipariş içe alma:** paketler `TY{paketNo}` numarasıyla yerel siparişe (kanal = Trendyol) dönüşüyor; paket no tekil dış referans → idempotent. Barkodla eşleşen varyantların stoğu düşüyor (sıfırın altına inmiyor), pazaryeri satır numarası ve kargo bilgisi saklanıyor. Sonraki çekimlerde durum ileri yönde yansıtılıyor, Trendyol'da iptal edilen siparişin stoğu geri ekleniyor.
+- [x] **Periyodik sipariş çekme** (Faz 3.4'ten taşındı): son çekim zamanından (`Marketplace_SyncStates` imleci, 5 dk örtüşme) şimdiye kadar 14 günlük pencerelerle, `PackageLastModifiedDate`'e göre artan sırada; ilk çalışmada son 14 gün, en fazla 28 gün geriye. İmleç yalnızca pencere tamamen işlenince ilerliyor.
+- [x] **Statü geri bildirimi:** Trendyol siparişi yerelde Hazırlanıyor olunca Picking, Kargoda olunca Invoiced (fatura numarası zorunlu; kargo bilgisi Trendyol'dan geliyor) aynı kayıtta `Marketplace_OrderStatusOutbox`'a yazılıyor ve işçi sırayla gönderiyor (önceki bildirim beklerken sonraki gönderilmiyor).
+- [x] **Senkron logu ve tekrar deneme** (`/api/v1/marketplaces/sync`, Admin): `logs` (pazaryeri/işlem/sonuç filtresi), `states` (imleç, bekleme, son hata), `outbox/{Inventory|OrderStatus}` listeleme, `.../{id}/retry` ve `.../retry-failed`. Yayınlama, fiyat/stok, sipariş içe alma ve statü bildirimleri loglanıyor.
+- [x] Arka plan işleri: batch + listing durumu (60 sn), stok/fiyat (60 sn), sipariş içe alma (5 dk), statü bildirimi (60 sn); `Trendyol:{BatchPolling|InventorySync|OrderImport|OrderStatusSync}` ile açılıp kapatılabiliyor. Elle tetikleme: `POST .../trendyol/sync/listings|inventory|orders|order-status`.
+- [ ] Onaylı ürün içerik güncellemesinin (başlık/açıklama/görsel) yerelden otomatik gönderimi → MVP sonrası (fiyat/stok otomatik).
 
-**Kabul:** Bir ürün yerelde oluşturulup Trendyol'a yayınlanabiliyor; stok yerelden değişince Trendyol'a yansıyor; hem siteden hem Trendyol'dan gelen siparişler tek listede, ortak stoğu düşürüyor.
+**Kabul:** Ürün yerelde oluşturulup Trendyol'a yayınlanabiliyor ✔; yerel stok/fiyat değişikliği Trendyol'a gidiyor ✔; site ve Trendyol siparişleri `/api/v1/orders` altında tek listede, ortak stoğu düşürüyor ✔. `MarketplaceAcceptanceTests` bu senaryoyu gerçek Trendyol client'ı + WireMock ve Testcontainers SQL Server ile uçtan uca doğruluyor; canlı deneme stage bilgileri gelince.
 
 ---
 
