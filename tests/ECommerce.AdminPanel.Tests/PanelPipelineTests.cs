@@ -38,9 +38,12 @@ public class PanelPipelineTests
     [InlineData("/products", true)]
     [InlineData("/products/new", true)]
     [InlineData("/products/7", true)]
+    [InlineData("/orders", true)]
+    [InlineData("/orders/1", true)]
+    [InlineData("/orders/2", true)]
     public async Task Pages_have_no_inline_scripts_or_styles(string path, bool signedIn)
     {
-        await using var factory = new PanelFactory(api: CatalogApi.Create());
+        await using var factory = new PanelFactory(api: OrderApi.Register(CatalogApi.Create()));
         var client = factory.CreatePanelClient();
         if (signedIn)
             await PanelFactory.LoginAsync(client, Ct);

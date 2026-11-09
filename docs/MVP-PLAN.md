@@ -330,6 +330,12 @@ dotnet user-secrets set "Cors:AllowedOrigins:0" "http://localhost:5173"
 - [x] API doküman düzeltmeleri: `IActionResult` dönen 39 uç `ActionResult<T>`'ye geçti (client'ta `GetAsync` gibi metotlar gövdesiz `Task` dönüyordu), silmeler 204, sayaç cevapları tipli, multipart dosya alanı `string/binary`, para alanları `decimal` (önceden `double` üretiliyordu), `GET /catalog/categories/{id}` eklendi. `OpenApiDocumentTests` bunları koruyor.
 - Doğrulanmadı: ekranlar gerçek API'ye karşı tarayıcıda denenmedi (Docker kapalı); testler sahte API ile.
 
+**Sipariş ekranları (6.1.5 adım 5) — tamamlandı**
+- [x] Tek liste (durum, kanal, arama: sipariş no / müşteri adı / e-posta; sayfalı), tarihler Europe/Istanbul. Detay: kalemler (ürüne link), tutarlar, müşteri ve adres, ödeme ve kargo bilgisi, durum geçmişi.
+- [x] Duruma göre aksiyonlar: ödeme onayı (havalede açıklama hatırlatması), hazırla, kargoya ver (site: kargo + takip no; Trendyol: fatura no, kargo boşsa içe alınan değer kalır), teslim, iptal (sebep zorunlu). API'nin iş kuralı hataları ilgili formda gösterilir.
+- [x] Trendyol siparişinde iptal düğmesi yok: API yerel iptali Trendyol'a bildirmiyor (outbox yalnızca Picking/Invoiced). İptal Trendyol panelinden yapılır, senkronla yansır. **Açık karar:** API'nin pazaryeri siparişinin panelden iptalini reddetmesi gerekip gerekmediği.
+- [x] Bulunan hata: veritabanından okunan tarihler `Kind=Unspecified` geliyordu, API "Z" eki olmadan yazıyordu; client'lar yerel saat sanıyordu (geliştirme makinesinde 3 saat kayma). Tüm `DateTime` alanlarına okumada UTC dönüştürücüsü (`UtcDateTimeConverter`, migration gerekmedi). `OrderDto`'ya `InvoiceNumber` eklendi.
+
 **6.1.4 Ekranlar ve kullandıkları uçlar**
 
 | Ekran | İçerik | API |

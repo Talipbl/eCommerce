@@ -1,0 +1,224 @@
+@model OrderDetailPage
+@{
+    var order = Model.Order;
+    var address = order.ShippingAddress;
+    ViewData["Title"] = $"Sipariş {order.OrderNumber}";
+}
+
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <div class="me-auto">
+        <a asp-action="Index" class="small">← Siparişler</a>
+        <h1 class="h3 mb-0">@order.OrderNumber</h1>
+        <div class="small text-body-secondary">
+            @OrderLabels.Channel(order.Channel)
+            @if (order.ExternalReference is not null)
+            {
+                <span>· Pazaryeri no: @order.ExternalReference</span>
+            }
+            · @Display.Date(order.PlacedAt)
+        </div>
+    </div>
+    <span class="badge fs-6 @OrderLabels.StatusBadge(order.Status)">@OrderLabels.Status(order.Status)</span>
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-xl-8">
+        <section class="card mb-3" aria-labelledby="lines-title">
+            <div class="card-body">
+                <h2 id="lines-title" class="h5 card-title">Ürünler</h2>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr><th>Ürün</th><th>Barkod</th><th class="text-end">Adet</th><th class="text-end">Birim fiyat</th><th class="text-end">Tutar</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var line in order.Lines)
+                            {
+                                <tr>
+                                    <td>
+                                        @if (line.ProductId is { } productId)
+                                        {
+                                            <a asp-controller="Products" asp-action="Edit" asp-route-id="@productId">@line.ProductName</a>
+                                        }
+                                        else
+                                        {
+                                            @line.ProductName
+                                        }
+                                        @if (line.VariantDescription is not null)
+                                        {
+                                            <div class="small text-body-secondary">@line.VariantDescription</div>
+                                        }
+                                    </td>
+                                    <td>@line.Barcode</td>
+                                    <td class="text-end">@line.Quantity</td>
+                                    <td class="text-end text-nowrap">@Display.Money(line.UnitPrice)</td>
+                                    <td class="text-end text-nowrap">@Display.Money(line.LineTotal)</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot class="text-end">
+                            <tr><td colspan="4">Ara toplam</td><td class="text-nowrap">@Display.Money(order.Subtotal)</td></tr>
+                            <tr><td colspan="4">Kargo</td><td class="text-nowrap">@Display.Money(order.ShippingFee)</td></tr>
+                            @if (order.PaymentFee > 0)
+                            {
+                                <tr><td colspan="4">Ödeme ücreti</td><td class="text-nowrap">@Display.Money(order.PaymentFee)</td></tr>
+                            }
+                            <tr class="fw-bold"><td colspan="4">Toplam</td><td class="text-nowrap">@Display.Money(order.Total)</td></tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section class="card mb-3" aria-labelledby="history-title">
+            <div class="card-body">
+                <h2 id="history-title" class="h5 card-title">Durum geçmişi</h2>
+                <ol class="list-unstyled mb-0">
+                    @foreach (var change in order.History.OrderBy(h => h.ChangedAt))
+                    {
+                        <li class="mb-1">
+                            <span class="text-body-secondary small text-nowrap">@Display.Date(change.ChangedAt)</span>
+                            <span class="badge @OrderLabels.StatusBadge(change.Status) ms-1">@OrderLabels.Status(change.Status)</span>
+                            @if (change.Note is not null)
+                            {
+                                <span class="ms-1">@change.Note</span>
+                            }
+                        </li>
+                    }
+                </ol>
+            </div>
+        </section>
+    </div>
+
+    <div class="col-12 col-xl-4">
+        <section class="card mb-3" aria-labelledby="actions-title">
+            <div class="card-body">
+                <h2 id="actions-title" class="h5 card-title">İşlemler</h2>
+
+                @if (Model.CanConfirmPayment)
+                {
+                    @if (order.BankTransfer is not null)
+                    {
+                        <p class="small">Havale hesabınıza geçince ödemeyi onaylayın. Açıklamada sipariş numarası (<strong>@order.OrderNumber</strong>) olmalı.</p>
+                    }
+                    <form method="post" asp-action="ConfirmPayment" asp-route-id="@order.Id" data-confirm="@Display.Money(order.Total) tutarındaki ödeme alındı mı?">
+                        <button type="submit" class="btn btn-success w-100 mb-2">Ödemeyi onayla</button>
+                    </form>
+                }
+
+                @if (Model.CanPrepare)
+                {
+                    <form method="post" asp-action="Prepare" asp-route-id="@order.Id">
+                        <button type="submit" class="btn btn-primary w-100 mb-2">Hazırlamaya başla</button>
+                    </form>
+                    @if (Model.IsMarketplace)
+                    {
+                        <p class="small text-body-secondary">Trendyol'a "toplanıyor" bildirimi otomatik gönderilir.</p>
+                    }
+                }
+
+                @if (Model.CanShip)
+                {
+                    <form method="post" asp-action="Ship" asp-route-id="@order.Id" class="mb-2" novalidate>
+                        @if (Model.ActiveForm == OrderDetailPage.ShipForm)
+                        {
+                            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                        }
+                        <div class="mb-2">
+                            <label asp-for="Ship.CargoProvider" class="form-label small"></label>
+                            <input asp-for="Ship.CargoProvider" class="form-control" />
+                            <span asp-validation-for="Ship.CargoProvider" class="invalid-feedback d-block"></span>
+                        </div>
+                        <div class="mb-2">
+                            <label asp-for="Ship.TrackingNumber" class="form-label small"></label>
+                            <input asp-for="Ship.TrackingNumber" class="form-control" />
+                            <span asp-validation-for="Ship.TrackingNumber" class="invalid-feedback d-block"></span>
+                        </div>
+                        @if (Model.IsMarketplace)
+                        {
+                            <div class="mb-2">
+                                <label asp-for="Ship.InvoiceNumber" class="form-label small"></label>
+                                <input asp-for="Ship.InvoiceNumber" class="form-control" />
+                                <div class="form-text">Trendyol'a fatura bildirimi için zorunlu. Kargo bilgisi boşsa Trendyol'dan gelen değer kalır.</div>
+                                <span asp-validation-for="Ship.InvoiceNumber" class="invalid-feedback d-block"></span>
+                            </div>
+                        }
+                        <button type="submit" class="btn btn-primary w-100">Kargoya ver</button>
+                    </form>
+                }
+
+                @if (Model.CanDeliver)
+                {
+                    <form method="post" asp-action="Deliver" asp-route-id="@order.Id" data-confirm="Sipariş teslim edildi olarak işaretlensin mi?">
+                        <button type="submit" class="btn btn-success w-100 mb-2">Teslim edildi</button>
+                    </form>
+                }
+
+                @if (Model.CanCancel)
+                {
+                    <hr />
+                    <form method="post" asp-action="Cancel" asp-route-id="@order.Id" novalidate data-confirm="Sipariş iptal edilsin mi? Stok geri eklenir.">
+                        @if (Model.ActiveForm == OrderDetailPage.CancelForm)
+                        {
+                            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                        }
+                        <label asp-for="Cancel.Reason" class="form-label small"></label>
+                        <input asp-for="Cancel.Reason" class="form-control mb-2" />
+                        <span asp-validation-for="Cancel.Reason" class="invalid-feedback d-block mb-2"></span>
+                        <button type="submit" class="btn btn-outline-danger w-100">Siparişi iptal et</button>
+                    </form>
+                }
+                else if (Model.IsCancellableOnMarketplace)
+                {
+                    <hr />
+                    <p class="small text-body-secondary mb-0">Trendyol siparişi Trendyol satıcı panelinden iptal edilir; iptal senkronla buraya yansır.</p>
+                }
+
+                @if (order.Status is OrderStatus.Delivered or OrderStatus.Cancelled)
+                {
+                    <p class="text-body-secondary small mb-0">Bu sipariş için yapılacak işlem yok.</p>
+                }
+            </div>
+        </section>
+
+        <section class="card mb-3" aria-labelledby="customer-title">
+            <div class="card-body">
+                <h2 id="customer-title" class="h5 card-title">Müşteri ve teslimat</h2>
+                <p class="mb-1">@order.CustomerName</p>
+                <p class="mb-2 small"><a href="mailto:@order.CustomerEmail">@order.CustomerEmail</a></p>
+                <address class="mb-0 small">
+                    @address.FullName<br />
+                    @address.AddressLine<br />
+                    @address.District / @address.City @address.PostalCode<br />
+                    @address.Phone
+                </address>
+                @if (order.Note is not null)
+                {
+                    <p class="mt-2 mb-0 small"><strong>Sipariş notu:</strong> @order.Note</p>
+                }
+            </div>
+        </section>
+
+        <section class="card mb-3" aria-labelledby="payment-title">
+            <div class="card-body">
+                <h2 id="payment-title" class="h5 card-title">Ödeme ve kargo</h2>
+                <dl class="row small mb-0">
+                    <dt class="col-5">Ödeme</dt><dd class="col-7">@OrderLabels.Payment(order.PaymentMethod)</dd>
+                    <dt class="col-5">Ödendi</dt><dd class="col-7">@Display.Date(order.PaidAt)</dd>
+                    <dt class="col-5">Kargo</dt><dd class="col-7">@(order.CargoProvider ?? "—")</dd>
+                    <dt class="col-5">Takip no</dt><dd class="col-7">@(order.TrackingNumber ?? "—")</dd>
+                    @if (order.InvoiceNumber is not null)
+                    {
+                        <dt class="col-5">Fatura no</dt><dd class="col-7">@order.InvoiceNumber</dd>
+                    }
+                    <dt class="col-5">Kargoya verildi</dt><dd class="col-7">@Display.Date(order.ShippedAt)</dd>
+                    <dt class="col-5">Teslim</dt><dd class="col-7">@Display.Date(order.DeliveredAt)</dd>
+                    @if (order.CancelReason is not null)
+                    {
+                        <dt class="col-5">İptal sebebi</dt><dd class="col-7">@order.CancelReason (@Display.Date(order.CancelledAt))</dd>
+                    }
+                </dl>
+            </div>
+        </section>
+    </div>
+</div>
