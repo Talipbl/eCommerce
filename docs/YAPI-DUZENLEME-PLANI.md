@@ -174,12 +174,17 @@ Faz 1–4 bittikten sonra, ayrı branch'te yapılır. Bugün Application'da Maps
 
 **Tahmini süre:** Faz 1 ≈ 1–1,5 gün, Faz 2 ≈ 0,5 gün, Faz 3 ≈ 0,5 gün, Faz 4 ≈ 0,5 gün, Faz 5 ≈ 1,5–2 gün.
 
+### Faz 6 — Solution ve disk yapısının eşitlenmesi
+- [x] 6.1 `Trendyol.Client` solution'da `src` yerine `marketplaces` klasörüne alındı; solution klasörleri diskle aynı: `src/`, `marketplaces/`, `tests/`.
+- [x] 6.2 Solution dışında kalan ve derlenmeyen `N11.Client`, `Hepsiburada.Client` ve `N11.Client.UnitTest` silindi. Gerekirse git geçmişinden geri alınabilir.
+- [x] 6.3 Yerel diskteki eski build klasörleri (yalnızca `bin/obj`) temizlendi; `.dockerignore`'daki `clients/` satırı kaldırıldı.
+
 ---
 
 ## Kapsam dışı (ayrıca değerlendirilebilir)
 - **Üç ayrı sonuç tipi:** `Result<T>`, `AuthResult<T>`, `MarketplaceResult<T>`. Birleştirmek davranış ve controller dönüşlerini değiştirir; bu plan yalnızca taşıma yaptığı için dışarıda.
 - **Domain namespace'ini `ECommerce.Domain.*` yapmak:** EF model snapshot'ındaki tip adlarını değiştirir; ayrı ve dikkatli bir iş.
-- **`marketplaces/N11.Client` ve `Hepsiburada.Client`:** solution'da değiller, MVP dışı. Silme ya da `legacy/` altına alma kararı ayrı.
+- ~~**`marketplaces/N11.Client` ve `Hepsiburada.Client`:** solution dışı, MVP dışı.~~ Faz 6'da silindi.
 
 ## Alınan kararlar
 - **Alt klasör namespace'i:** `Dtos/` ve `Validators/` özellik namespace'ini kullanır (`ECommerce.Application.Catalog`); `using` değişikliği gerekmez. (2026-11-09)

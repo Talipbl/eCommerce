@@ -2,6 +2,10 @@
 
 Yeni kod bu düzene uyar. Gerekçe ve geçmiş için bkz. [YAPI-DUZENLEME-PLANI.md](YAPI-DUZENLEME-PLANI.md).
 
+## Solution
+
+Solution klasörleri disk klasörleriyle aynıdır: `src/` (uygulama katmanları), `marketplaces/` (pazaryeri HTTP client'ları), `tests/`. Diskte olup solution'da olmayan proje tutulmaz.
+
 ## Application (`src/ECommerce.Application`)
 
 Özellik (feature) klasörleri: `Auth`, `Catalog`, `Customers`, `Shopping`, `Ordering`, `Marketplaces`, `Marketplaces/Trendyol`, `Common`.
