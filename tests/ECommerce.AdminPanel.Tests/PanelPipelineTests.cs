@@ -1,6 +1,5 @@
 using AngleSharp.Html.Parser;
 using ECommerce.AdminPanel.Api;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using System.Net;
@@ -11,15 +10,12 @@ public class PanelPipelineTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    private static HttpClient Client(PanelFactory factory) =>
-        factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
-
     [Fact]
     public async Task Responses_include_strict_security_headers()
     {
         await using var factory = new PanelFactory();
 
-        var response = await Client(factory).GetAsync("/", Ct);
+        var response = await factory.CreatePanelClient().GetAsync("/account/login", Ct);
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         response.Headers.GetValues("X-Frame-Options").ShouldContain("DENY");
@@ -31,12 +27,18 @@ public class PanelPipelineTests
         csp.ShouldNotContain("unsafe-inline");
     }
 
-    [Fact]
-    public async Task Pages_have_no_inline_scripts_or_styles()
+    [Theory]
+    [InlineData("/account/login", false)]
+    [InlineData("/", true)]
+    [InlineData("/account/password", true)]
+    public async Task Pages_have_no_inline_scripts_or_styles(string path, bool signedIn)
     {
         await using var factory = new PanelFactory();
+        var client = factory.CreatePanelClient();
+        if (signedIn)
+            await PanelFactory.LoginAsync(client, Ct);
 
-        var html = await Client(factory).GetStringAsync("/", Ct);
+        var html = await client.GetStringAsync(path, Ct);
         var document = new HtmlParser().ParseDocument(html);
 
         document.QuerySelectorAll("script").ShouldAllBe(s => s.HasAttribute("src"));
@@ -47,8 +49,10 @@ public class PanelPipelineTests
     public async Task Unknown_page_renders_not_found_view()
     {
         await using var factory = new PanelFactory();
+        var client = factory.CreatePanelClient();
+        await PanelFactory.LoginAsync(client, Ct);
 
-        var response = await Client(factory).GetAsync("/olmayan-sayfa", Ct);
+        var response = await client.GetAsync("/olmayan-sayfa", Ct);
 
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
         var document = new HtmlParser().ParseDocument(await response.Content.ReadAsStringAsync(Ct));
@@ -60,9 +64,11 @@ public class PanelPipelineTests
     {
         await using var factory = new PanelFactory();
 
-        var response = await Client(factory).PostAsync("/", new FormUrlEncodedContent([]), Ct);
+        var response = await factory.CreatePanelClient().PostAsync("/account/login",
+            new FormUrlEncodedContent([new("UserName", "admin"), new("Password", "Parola123!")]), Ct);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        factory.Api.Requests.ShouldBeEmpty();
     }
 
     [Fact]
@@ -76,6 +82,23 @@ public class PanelPipelineTests
 
         orders.ShouldBeOfType<OrdersClient>();
         client.BaseAddress.ShouldBe(new Uri("http://api:8080/"));
+    }
+
+    [Fact]
+    public async Task Api_clients_keep_error_bodies_for_problem_mapping()
+    {
+        await using var factory = new PanelFactory();
+        _ = factory.Server;
+        using var scope = factory.Services.CreateScope();
+
+        var clients = typeof(IOrdersClient).Assembly.GetTypes()
+            .Where(t => t.IsInterface && t.Namespace == typeof(IOrdersClient).Namespace)
+            .Select(t => scope.ServiceProvider.GetService(t))
+            .OfType<object>()
+            .ToList();
+
+        clients.Count.ShouldBeGreaterThan(5);
+        clients.ShouldAllBe(c => (bool)c.GetType().GetProperty("ReadResponseAsString")!.GetValue(c)!);
     }
 
     [Fact]

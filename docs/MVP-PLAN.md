@@ -295,7 +295,7 @@ dotnet user-secrets set "Cors:AllowedOrigins:0" "http://localhost:5173"
 **Teknik kararlar**
 - Razor view + Bootstrap 5; statik dosyalar projede (`wwwroot/lib`, LibMan), CDN ve Node build adımı yok. Etkileşim için az miktarda vanilla JS (görsel sıralama, Trendyol kategori/marka arama kutuları).
 - Panel kendi güvenlik başlıklarını basar: sıkı CSP (`script-src 'self'`), `X-Frame-Options: DENY`, HSTS. Tüm POST formlarında global `AutoValidateAntiforgeryToken`.
-- Testler `tests/ECommerce.AdminPanel.Tests`: unit (token handler, ProblemDetails eşleme) + panelin `WebApplicationFactory`'si, API WireMock ile taklit edilir. HTML doğrulaması AngleSharp ile. TDD kuralı panel altyapısı için geçerli; düz CRUD view'ları için uçtan uca birkaç akış testi yeterli.
+- Testler `tests/ECommerce.AdminPanel.Tests`: unit (token handler, ProblemDetails eşleme) + panelin `WebApplicationFactory`'si; API, HttpClient'ların primary handler'ı yerine konan `FakeApi` ile taklit edilir (ağ ve ek paket yok). HTML doğrulaması AngleSharp ile. TDD kuralı panel altyapısı için geçerli; düz CRUD view'ları için uçtan uca birkaç akış testi yeterli.
 
 **6.1.1 API client'ı (OpenAPI'den üretim)**
 - [x] API'ye `Microsoft.Extensions.ApiDescription.Server`: derlemede `src/ECommerce.API/openapi/ecommerce-api.json` (OpenAPI 3.0) üretilir ve repoya commit'lenir. Üretim sırasında zorunlu ayarlar yer tutucuyla doldurulur, arka plan işleri çalışmaz; Docker publish'te üretim kapalı.
@@ -306,13 +306,15 @@ dotnet user-secrets set "Cors:AllowedOrigins:0" "http://localhost:5173"
 - [x] İskelet: Bootstrap 5 layout, `tr-TR` hata sayfaları, CSP (`script-src 'self'`, inline yok; görseller için `Media:PublicBaseUrl`), global antiforgery, `/health/live`. `tests/ECommerce.AdminPanel.Tests`: 18 test.
 
 **6.1.2 Oturum (BFF)**
-- [ ] Giriş formu → `POST /api/v1/auth/login`. Access token gövdeden, refresh token cevabın `Set-Cookie: ecommerce_refresh` başlığından okunur. Panel tarafındaki `HttpClient` cookie container kullanmaz (`UseCookies = false`); refresh çağrısında `Cookie` başlığı elle eklenir (API cookie'si `Secure` olduğu için iç ağdaki `http://api:8080` çağrılarında container göndermezdi).
-- [ ] Panel kendi cookie oturumunu açar (`admin_session`, `httpOnly`, `Secure`, `SameSite=Strict`, 8 saat kayan süre). Token'lar cookie'ye yazılmaz; `ITicketStore` (`IMemoryCache`) ile sunucuda tutulur, tarayıcıda yalnızca oturum anahtarı olur. Panel yeniden başlarsa yönetici tekrar giriş yapar (tek yönetici için kabul edilebilir).
-- [ ] Data Protection anahtarları volume'de (`/app/keys`), antiforgery ve oturum cookie'leri deploy sonrası geçerli kalsın.
-- [ ] `ApiTokenHandler` (`DelegatingHandler`): her isteğe Bearer ekler; token'ın bitmesine 60 sn'den az kaldıysa önce yeniler; 401 gelirse bir kez yenileyip tekrar dener; yenileme başarısızsa oturum kapatılır ve girişe yönlendirilir.
-- [ ] **Yenileme oturum başına kilitli** (`SemaphoreSlim`): API döndürülmüş bir refresh token'ın tekrar kullanımını çalınma sayıp tüm oturumları kapatıyor; paralel istekler aynı token'la iki kez yenileme yaparsa yönetici atılır. Bunun testi yazılır.
-- [ ] Çıkış: `POST /auth/logout` (refresh cookie'siyle) + yerel oturumun silinmesi. Parola değiştirme ekranı: başarılı olunca API tüm oturumları kapattığı için panel de çıkış yapar.
-- [ ] Rate limit: API giriş limitini IP'ye göre uyguluyor; panel üzerinden gelen tüm istekler panel container'ının IP'sinden geldiği için panel API'ye `X-Forwarded-For` ile gerçek istemci IP'sini iletir (API forwarded header'ları zaten okuyor). Böylece bir saldırgan paneldeki giriş formunu zorlayınca yöneticinin kendisi limite takılmaz.
+- [x] Giriş formu → `POST /api/v1/auth/login` (`ApiAuthClient`, üretilen client değil). Access token gövdeden, refresh token `Set-Cookie: ecommerce_refresh`'ten okunur; yenileme ve çıkışta `Cookie` başlığıyla elle gönderilir. Tüm API client'larında cookie container kapalı (`UseCookies = false`): havuzdaki handler'lar oturumlar arasında paylaşılıyor.
+- [x] Panel cookie'si (`admin_session`, `httpOnly`, `Secure`, `SameSite=Strict`, 8 saat kayan süre) yalnızca oturum anahtarını taşır. Token'lar `AdminSessionStore`'da (`IMemoryCache`, 8 saat kayan süre); sunucuda oturumu olmayan cookie reddedilir. Panel yeniden başlarsa yönetici tekrar giriş yapar. Giriş, statik dosyalar, hata sayfası ve `/health/live` dışındaki her uç oturum ister.
+- [x] Data Protection anahtarları `DataProtection:KeysPath` ayarlıysa oraya yazılır (yayında `/app/keys` volume'ü).
+- [x] `ApiTokenHandler`: her isteğe Bearer ekler; token'ın bitmesine 60 sn'den az kaldıysa önce yeniler; 401 gelirse bir kez yenileyip aynı gövdeyle tekrar dener; yenileme reddedilirse oturum silinir, `SessionExpiredFilter` panel cookie'sini silip girişe yönlendirir (GET'te kalınan sayfaya geri döner).
+- [x] **Yenileme oturum başına kilitli** (`SemaphoreSlim`): API döndürülmüş refresh token'ın tekrar kullanımını çalınma sayıp tüm oturumları kapatıyor. Kilidi alan istek token hâlâ eskiyse yeniler, diğerleri yeni token'ı kullanır; yenileme çağrısı istek iptal edilse de tamamlanır (yeni refresh token kaybolmasın). Testi: aynı süresi dolmuş token'la 5 paralel istek → API'ye tek yenileme.
+- [x] Çıkış: `POST /auth/logout` (refresh cookie'siyle; API'ye ulaşılamazsa yalnızca yerel oturum kapanır) + yerel oturumun silinmesi. Parola değiştirme: başarılı olunca panel de çıkış yapar ve giriş sayfasında bilgi mesajı gösterir; API'nin alan hataları ilgili alanın altına düşer.
+- [x] Rate limit: panel API'ye `X-Forwarded-For` ile gerçek istemci IP'sini iletir (tarayıcıdan gelen değer kullanılmaz). API bunu compose'daki `ASPNETCORE_FORWARDEDHEADERS_ENABLED` ile okuyor; panelin de Caddy arkasında gerçek IP'yi görmesi için aynı ayar gerekir (6.3).
+- [x] Bulunan hata: üretilen client tanımlı hata cevaplarında (400 ProblemDetails, 404...) gövdeyi saklamıyordu, alan hataları forma düşmezdi. Kayıtlı client'larda `ReadResponseAsString` açıldı (`ApiClientDefaults.cs`), testi var. Türkçe karakterler HTML'de kodlanmasın diye `WebEncoders` tüm Unicode aralığına açıldı.
+- [x] `tests/ECommerce.AdminPanel.Tests`: 51 test (oturum kilidi, token handler, auth client, forwarded header, giriş/çıkış/parola akışları).
 
 **6.1.3 API'deki eksikler (TDD, panelden önce)**
 - [ ] `GET /api/v1/dashboard/summary`: duruma göre sipariş sayıları, onay bekleyen havaleler, bugün / son 7 gün ciro (kanal bazında), stoğu eşiğin altındaki varyantlar (`Dashboard:LowStockThreshold`, varsayılan 5), hatalı outbox sayıları, hatası olan veya beklemedeki senkron işleri.
@@ -356,7 +358,7 @@ dotnet user-secrets set "Cors:AllowedOrigins:0" "http://localhost:5173"
 ### 6.3 CI ve yayın
 - [ ] CI: mevcut .NET job'ı aynen kalır (AdminPanel ve testleri solution'da olduğu için oraya dahil); `frontend/**` path filtresiyle ayrı Node job'ı (lint, build). Docker matrisine `ecommerce-admin` ve `ecommerce-storefront` eklenir.
 - [ ] Compose + Caddy: `alanadi.com` → storefront, `alanadi.com/api/*` ve `/media/*` → api, `admin.alanadi.com` → AdminPanel. Vitrin ile API aynı origin'de olduğu için CORS gerekmez ve `SameSite=Strict` refresh cookie'si sorunsuz çalışır.
-- [ ] `admin` servisi: `Api__BaseUrl=http://api:8080`, Data Protection anahtarları için `admin-keys` volume'ü, `/health/live` health check. Panel API'yi iç ağdan çağırdığı için CORS listesine eklenmez. İsteğe bağlı: Caddy'de `admin.` alt alan adına IP kısıtı veya basic auth.
+- [ ] `admin` servisi: `Api__BaseUrl=http://api:8080`, `ASPNETCORE_FORWARDEDHEADERS_ENABLED=true` (giriş limiti için gerçek istemci IP'si), `DataProtection__KeysPath=/app/keys` + `admin-keys` volume'ü, `/health/live` health check. Panel API'yi iç ağdan çağırdığı için CORS listesine eklenmez. İsteğe bağlı: Caddy'de `admin.` alt alan adına IP kısıtı veya basic auth.
 
 ---
 
