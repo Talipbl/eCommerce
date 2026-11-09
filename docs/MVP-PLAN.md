@@ -317,8 +317,9 @@ dotnet user-secrets set "Cors:AllowedOrigins:0" "http://localhost:5173"
 - [x] `tests/ECommerce.AdminPanel.Tests`: 51 test (oturum kilidi, token handler, auth client, forwarded header, giriş/çıkış/parola akışları).
 
 **6.1.3 API'deki eksikler (TDD, panelden önce)**
-- [ ] `GET /api/v1/dashboard/summary`: duruma göre sipariş sayıları, onay bekleyen havaleler, bugün / son 7 gün ciro (kanal bazında), stoğu eşiğin altındaki varyantlar (`Dashboard:LowStockThreshold`, varsayılan 5), hatalı outbox sayıları, hatası olan veya beklemedeki senkron işleri.
-- [ ] `GET /api/v1/marketplaces/trendyol/listings?status=&page=&size=`: ürün adıyla birlikte tüm Trendyol yayınları (şu an yalnızca ürün bazında `GET listings/{productId}` var; "Reddedilenler", "Onay bekleyenler" listesi için gerekli).
+- [x] `GET /api/v1/dashboard/summary` (`Application/Dashboard`): duruma göre sipariş sayıları (sıfır olanlar dahil), onay bekleyen havaleler, bugün / son 7 gün ciro (iptaller hariç, kanal bazında; gün sınırı `Dashboard:TimeZone`, varsayılan `Europe/Istanbul`), stoğu eşik ve altındaki aktif varyantlar (`Dashboard:LowStockThreshold`, varsayılan 5; en fazla `LowStockListSize` = 20 satır + toplam sayı), hatalı outbox sayıları (Inventory / OrderStatus), hatası olan veya beklemedeki senkron işleri. Geçersiz saat dilimi API'yi açılışta durdurur.
+- [x] `GET /api/v1/marketplaces/trendyol/listings?status=&page=&size=`: ürün adı ve koduyla Trendyol yayınları, son gönderilen önce.
+- [x] Testler: unit (InMemory) + SQL Server'da sorgu çevirisi için entegrasyon testi (`DashboardEndpointsTests`; yerelde Docker kapalıyken atlanır, CI'da çalışır). Panelde `DashboardClient` kaydedildi.
 - [ ] (Opsiyonel) Yönetici için müşteri listesi/detayı (`/api/v1/customers`); sipariş detayından müşteriye geçiş için. MVP'de yoksa sipariş detayındaki müşteri bilgisi yeterli.
 
 **6.1.4 Ekranlar ve kullandıkları uçlar**

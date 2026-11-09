@@ -25,6 +25,7 @@ public static class ApiClientRegistration
         services.AddHttpClient<IApiAuthClient, ApiAuthClient>().ConfigureApiHttpClient();
 
         services.AddApiClient<IAuthClient, AuthClient>();
+        services.AddApiClient<IDashboardClient, DashboardClient>();
         services.AddApiClient<ICategoriesClient, CategoriesClient>();
         services.AddApiClient<IBrandsClient, BrandsClient>();
         services.AddApiClient<IProductsClient, ProductsClient>();

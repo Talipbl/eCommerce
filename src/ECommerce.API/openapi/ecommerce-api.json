@@ -1382,6 +1382,63 @@
         }
       }
     },
+    "/api/v1/marketplaces/trendyol/listings": {
+      "get": {
+        "tags": [
+          "Trendyol - Entegrasyon"
+        ],
+        "operationId": "TrendyolIntegration_ListListings",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/ListingStatus"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfListingSummaryDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfListingSummaryDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfListingSummaryDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/marketplaces/trendyol/listings/{productId}": {
       "get": {
         "tags": [
@@ -2311,6 +2368,36 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BatchAcceptedDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dashboard/summary": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "operationId": "Dashboard_Summary",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardSummaryDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardSummaryDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardSummaryDto"
                 }
               }
             }
@@ -4781,6 +4868,27 @@
           }
         }
       },
+      "ChannelRevenueDto": {
+        "required": [
+          "channel",
+          "total",
+          "orderCount"
+        ],
+        "type": "object",
+        "properties": {
+          "channel": {
+            "$ref": "#/components/schemas/OrderChannel"
+          },
+          "total": {
+            "type": "number",
+            "format": "double"
+          },
+          "orderCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "CheckoutRequest": {
         "required": [
           "addressId",
@@ -4977,6 +5085,48 @@
           }
         }
       },
+      "DashboardSummaryDto": {
+        "required": [
+          "ordersByStatus",
+          "pendingBankTransfers",
+          "today",
+          "last7Days",
+          "lowStock",
+          "failedOutbox",
+          "syncAlerts"
+        ],
+        "type": "object",
+        "properties": {
+          "ordersByStatus": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderStatusCountDto"
+            }
+          },
+          "pendingBankTransfers": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "today": {
+            "$ref": "#/components/schemas/RevenueDto"
+          },
+          "last7Days": {
+            "$ref": "#/components/schemas/RevenueDto"
+          },
+          "lowStock": {
+            "$ref": "#/components/schemas/LowStockDto"
+          },
+          "failedOutbox": {
+            "$ref": "#/components/schemas/FailedOutboxDto"
+          },
+          "syncAlerts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncStateDto"
+            }
+          }
+        }
+      },
       "DeleteTrendyolProductsRequest": {
         "required": [
           "barcodes"
@@ -4988,6 +5138,23 @@
             "items": {
               "type": "string"
             }
+          }
+        }
+      },
+      "FailedOutboxDto": {
+        "required": [
+          "inventory",
+          "orderStatus"
+        ],
+        "type": "object",
+        "properties": {
+          "inventory": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "orderStatus": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -5111,6 +5278,58 @@
         ],
         "type": "string"
       },
+      "ListingSummaryDto": {
+        "required": [
+          "productId",
+          "productName",
+          "productCode",
+          "status",
+          "externalContentId",
+          "lastBatchRequestId",
+          "statusMessage",
+          "lastSubmittedAt",
+          "lastCheckedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "productName": {
+            "type": "string"
+          },
+          "productCode": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ListingStatus"
+          },
+          "externalContentId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "lastBatchRequestId": {
+            "type": "string",
+            "nullable": true
+          },
+          "statusMessage": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastSubmittedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastCheckedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
       "LoginRequest": {
         "required": [
           "userName",
@@ -5123,6 +5342,64 @@
           },
           "password": {
             "type": "string"
+          }
+        }
+      },
+      "LowStockDto": {
+        "required": [
+          "threshold",
+          "totalCount",
+          "variants"
+        ],
+        "type": "object",
+        "properties": {
+          "threshold": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LowStockVariantDto"
+            }
+          }
+        }
+      },
+      "LowStockVariantDto": {
+        "required": [
+          "productId",
+          "productName",
+          "variantId",
+          "sku",
+          "barcode",
+          "stockQuantity"
+        ],
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "productName": {
+            "type": "string"
+          },
+          "variantId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "barcode": {
+            "type": "string"
+          },
+          "stockQuantity": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -5502,6 +5779,22 @@
           }
         }
       },
+      "OrderStatusCountDto": {
+        "required": [
+          "status",
+          "count"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/OrderStatus"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "OrderSummaryDto": {
         "required": [
           "id",
@@ -5693,6 +5986,39 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/BatchDto"
+            }
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PagedResultOfListingSummaryDto": {
+        "required": [
+          "page",
+          "size",
+          "totalElements",
+          "content"
+        ],
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ListingSummaryDto"
             }
           },
           "totalPages": {
@@ -6136,6 +6462,35 @@
             "items": {
               "type": "integer",
               "format": "int32"
+            }
+          }
+        }
+      },
+      "RevenueDto": {
+        "required": [
+          "from",
+          "total",
+          "orderCount",
+          "byChannel"
+        ],
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "total": {
+            "type": "number",
+            "format": "double"
+          },
+          "orderCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "byChannel": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChannelRevenueDto"
             }
           }
         }
@@ -7474,6 +7829,9 @@
     },
     {
       "name": "Trendyol - Ürünler"
+    },
+    {
+      "name": "Dashboard"
     },
     {
       "name": "Müşteri - Hesap"

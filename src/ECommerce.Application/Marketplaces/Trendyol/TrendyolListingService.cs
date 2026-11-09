@@ -116,6 +116,23 @@ public class TrendyolListingService(
         return Result<BrandMappingDto>.Success(mapper.Map<BrandMappingDto>(mapping));
     }
 
+    public async Task<PagedResult<ListingSummaryDto>> ListAsync(ListingQuery query, CancellationToken cancellationToken = default)
+    {
+        var page = Math.Max(query.Page, 0);
+        var size = Math.Clamp(query.Size, 1, 200);
+        IQueryable<MarketplaceListing> Filter(IQueryable<MarketplaceListing> q) =>
+            q.Where(l => l.Marketplace == Marketplace && (query.Status == null || l.Status == query.Status));
+
+        var total = await listings.CountAsync(Filter, cancellationToken);
+        var items = await listings.ListAsync(q => Filter(q)
+            .OrderByDescending(l => l.LastSubmittedAt).ThenByDescending(l => l.Id)
+            .Skip(page * size).Take(size)
+            .Join(products.Query(), l => l.ProductId, p => p.Id, (l, p) => new ListingSummaryDto(
+                l.ProductId, p.Name, p.ProductCode, l.Status, l.ExternalContentId, l.LastBatchRequestId, l.StatusMessage, l.LastSubmittedAt, l.LastCheckedAt)),
+            cancellationToken);
+        return new PagedResult<ListingSummaryDto>(page, size, total, items);
+    }
+
     public async Task<Result<ListingDto>> GetAsync(int productId, CancellationToken cancellationToken = default)
     {
         var listing = await FindListingAsync(productId, cancellationToken);

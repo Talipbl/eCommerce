@@ -2,6 +2,7 @@ using ECommerce.Admin;
 using ECommerce.Application.Auth;
 using ECommerce.Application.Catalog;
 using ECommerce.Application.Customers;
+using ECommerce.Application.Dashboard;
 using ECommerce.Application.Marketplaces;
 using ECommerce.Application.Marketplaces.Trendyol;
 using ECommerce.Application.Ordering;
@@ -31,7 +32,8 @@ public static class DependencyInjection
             .AddCustomers()
             .AddOrdering(configuration)
             .AddTrendyolIntegration(configuration)
-            .AddMarketplaces();
+            .AddMarketplaces()
+            .AddDashboard(configuration);
     }
 
     private static IServiceCollection AddAuth(this IServiceCollection services, IConfiguration configuration)
@@ -95,6 +97,17 @@ public static class DependencyInjection
         services.AddScoped<IMarketplaceOrderImportService, MarketplaceOrderImportService>();
         services.AddScoped<IMarketplaceOrderStatusSyncService, MarketplaceOrderStatusSyncService>();
         services.AddScoped<IMarketplaceSyncAdminService, MarketplaceSyncAdminService>();
+        return services;
+    }
+
+    private static IServiceCollection AddDashboard(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddOptions<DashboardOptions>()
+            .Bind(configuration.GetSection(DashboardOptions.SectionName))
+            .Validate(o => o.LowStockThreshold >= 0 && o.LowStockListSize is > 0 and <= 200, "Dashboard:LowStockThreshold negatif olamaz, LowStockListSize 1-200 arasında olmalı.")
+            .Validate(o => TimeZoneInfo.TryFindSystemTimeZoneById(o.TimeZone, out _), "Dashboard:TimeZone geçerli bir saat dilimi değil.")
+            .ValidateOnStart();
+        services.AddScoped<IDashboardService, DashboardService>();
         return services;
     }
 }

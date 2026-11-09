@@ -274,6 +274,33 @@ public sealed class TrendyolListingServiceTests : IAsyncLifetime
         log.Message!.ShouldContain("Kategori özelliği eksik");
     }
 
+    [Fact]
+    public async Task Listings_are_filtered_by_status_with_product_names_newest_first()
+    {
+        var brand = await _db.Brands.FirstOrDefaultAsync(b => b.Id == _product.BrandId, Ct);
+        var category = await _db.Categories.FirstOrDefaultAsync(c => c.Id == _product.CategoryId, Ct);
+        var second = await _db.AddProductAsync("Polo Yaka", brand!, category!);
+        var third = await _db.AddProductAsync("Sweatshirt", brand!, category!);
+
+        var rejected = MarketplaceListing.Create(MarketplaceNames.Trendyol, _product.Id);
+        rejected.MarkSubmitted("b1", _clock.GetUtcNow().UtcDateTime.AddHours(-2));
+        rejected.MarkRejected("Görsel kalitesi yetersiz", _clock.GetUtcNow().UtcDateTime);
+        var newerRejected = MarketplaceListing.Create(MarketplaceNames.Trendyol, second.Id);
+        newerRejected.MarkSubmitted("b2", _clock.GetUtcNow().UtcDateTime.AddHours(-1));
+        newerRejected.MarkRejected("Marka eşleşmiyor", _clock.GetUtcNow().UtcDateTime);
+        var live = MarketplaceListing.Create(MarketplaceNames.Trendyol, third.Id);
+        live.MarkLive(9001, _clock.GetUtcNow().UtcDateTime);
+        _db.Context.AddRange(rejected, newerRejected, live);
+        await _db.Context.SaveChangesAsync(Ct);
+
+        var page = await Service().ListAsync(new ListingQuery(ListingStatus.Rejected, Page: 0, Size: 1), Ct);
+
+        page.TotalElements.ShouldBe(2);
+        page.Content.Single().ShouldBe(new ListingSummaryDto(second.Id, "Polo Yaka", second.ProductCode, ListingStatus.Rejected, null, "b2",
+            "Marka eşleşmiyor", _clock.GetUtcNow().UtcDateTime.AddHours(-1), _clock.GetUtcNow().UtcDateTime));
+        (await Service().ListAsync(new ListingQuery(null), Ct)).TotalElements.ShouldBe(3);
+    }
+
     public ValueTask DisposeAsync() => _db.DisposeAsync();
 
     private sealed class HttpMediaUrlBuilder : IMediaUrlBuilder

@@ -8,7 +8,7 @@ Solution klasörleri disk klasörleriyle aynıdır: `src/` (uygulama katmanları
 
 ## Application (`src/ECommerce.Application`)
 
-Özellik (feature) klasörleri: `Auth`, `Catalog`, `Customers`, `Shopping`, `Ordering`, `Marketplaces`, `Marketplaces/Trendyol`, `Common`.
+Özellik (feature) klasörleri: `Auth`, `Catalog`, `Customers`, `Shopping`, `Ordering`, `Marketplaces`, `Marketplaces/Trendyol`, `Dashboard` (birden çok özelliği okuyan yönetici özetleri), `Common`.
 
 ```
 <Özellik>/

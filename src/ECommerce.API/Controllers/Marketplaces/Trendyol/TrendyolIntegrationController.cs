@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using ECommerce.API.Infrastructure;
+using ECommerce.Application.Common;
 using ECommerce.Application.Marketplaces;
 using ECommerce.Application.Marketplaces.Trendyol;
 using ECommerce.Marketplaces;
@@ -38,6 +39,11 @@ public class TrendyolIntegrationController(
     [HttpPut("mappings/brands/{brandId:int}")]
     public async Task<IActionResult> MapBrand(int brandId, MapBrandRequest request, CancellationToken cancellationToken) =>
         this.ToActionResult(await listings.MapBrandAsync(brandId, request, cancellationToken), Ok);
+
+    [HttpGet("listings")]
+    public async Task<PagedResult<ListingSummaryDto>> ListListings(
+        [FromQuery] ListingStatus? status, [FromQuery] int page = 0, [FromQuery] int size = 20, CancellationToken cancellationToken = default) =>
+        await listings.ListAsync(new ListingQuery(status, page, size), cancellationToken);
 
     [HttpGet("listings/{productId:int}")]
     public async Task<IActionResult> GetListing(int productId, CancellationToken cancellationToken) =>
