@@ -34,7 +34,10 @@
     <div class="card-body">
         <h2 id="details-title" class="h5 card-title">Ürün bilgileri</h2>
         <form method="post" asp-action="Edit" asp-route-id="@product.Id" novalidate>
-            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            @if (Model.ActiveForm == ProductEditPage.DetailsForm)
+            {
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            }
             <partial name="_DetailsFields" for="Details" view-data="ViewData" />
             <button type="submit" class="btn btn-primary mt-3">Bilgileri kaydet</button>
         </form>
@@ -85,6 +88,10 @@
 
         <h3 class="h6 mt-3">Yeni varyant</h3>
         <form method="post" asp-action="AddVariant" asp-route-id="@product.Id" novalidate>
+            @if (Model.ActiveForm == ProductEditPage.VariantForm)
+            {
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            }
             <partial name="_VariantFields" for="NewVariant" />
             <button type="submit" class="btn btn-outline-primary mt-3">Varyant ekle</button>
         </form>

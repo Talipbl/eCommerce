@@ -179,6 +179,25 @@ public class CatalogScreensTests
     }
 
     [Fact]
+    public async Task Variant_rule_error_is_shown_inside_the_new_variant_form()
+    {
+        var api = CatalogApi.Create().On("POST", $"/api/v1/catalog/products/{CatalogApi.ProductId}/variants",
+            _ => FakeApi.Problem(HttpStatusCode.Conflict, "Stok kodu veya barkod başka bir üründe kullanılıyor: BT-M."));
+        var (factory, client) = await SignedInAsync(api);
+        await using var _ = factory;
+
+        var response = await PanelFactory.PostFormAsync(client, $"/products/{CatalogApi.ProductId}/variants", new()
+        {
+            ["NewVariant.Sku"] = "BT-M", ["NewVariant.Barcode"] = "2", ["NewVariant.Price"] = "10", ["NewVariant.StockQuantity"] = "1"
+        }, Ct, $"/products/{CatalogApi.ProductId}");
+
+        var page = await ParseAsync(response);
+        page.QuerySelector("form[action$='/variants'] .validation-summary-errors")!.TextContent.Trim()
+            .ShouldBe("Stok kodu veya barkod başka bir üründe kullanılıyor: BT-M.");
+        page.QuerySelector("form[action$='/products/7'] .validation-summary-errors").ShouldBeNull();
+    }
+
+    [Fact]
     public async Task Edit_page_shows_variant_prices_as_dot_decimals_for_number_inputs()
     {
         var (factory, client) = await SignedInAsync(CatalogApi.Create());

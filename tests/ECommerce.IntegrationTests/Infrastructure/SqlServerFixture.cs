@@ -5,7 +5,7 @@ using Testcontainers.MsSql;
 namespace ECommerce.IntegrationTests.Infrastructure;
 
 /// <summary>
-/// Testcontainers ile SQL Server başlatır ve migration'ları uygular.
+/// Testcontainers ile SQL Server başlatır ve migration'ları uygular. ECOMMERCE_TEST_SQLSERVER verilirse o sunucu kullanılır.
 /// Docker yoksa yerelde testler atlanır; CI ortamında (CI=true) hata verir.
 /// </summary>
 public class SqlServerFixture : IAsyncLifetime
@@ -17,6 +17,16 @@ public class SqlServerFixture : IAsyncLifetime
 
     public async ValueTask InitializeAsync()
     {
+        // Docker yoksa mevcut bir sunucu kullanılabilir (ör. LocalDB); veritabanı her çalıştırmada silinip yeniden oluşturulur.
+        if (Environment.GetEnvironmentVariable("ECOMMERCE_TEST_SQLSERVER") is { Length: > 0 } external)
+        {
+            ConnectionString = external;
+            await using var existing = new ECommerceContext(Options(ConnectionString));
+            await existing.Database.EnsureDeletedAsync();
+            await existing.Database.MigrateAsync();
+            return;
+        }
+
         try
         {
             _container = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-latest").Build();
@@ -30,13 +40,14 @@ public class SqlServerFixture : IAsyncLifetime
 
         ConnectionString = _container.GetConnectionString();
 
-        var options = new DbContextOptionsBuilder<ECommerceContext>()
-            .UseSqlServer(ConnectionString, sql => sql.MigrationsHistoryTable("__EFMigrationsHistory", "dbo"))
-            .Options;
-
-        await using var context = new ECommerceContext(options);
+        await using var context = new ECommerceContext(Options(ConnectionString));
         await context.Database.MigrateAsync();
     }
+
+    private static DbContextOptions<ECommerceContext> Options(string connectionString) =>
+        new DbContextOptionsBuilder<ECommerceContext>()
+            .UseSqlServer(connectionString, sql => sql.MigrationsHistoryTable("__EFMigrationsHistory", "dbo"))
+            .Options;
 
     public async ValueTask DisposeAsync()
     {

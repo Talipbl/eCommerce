@@ -53,7 +53,7 @@ public class ProductsController(IProductsClient products, ITrendyolIntegrationCl
     public async Task<IActionResult> Edit(int id, [Bind(Prefix = DetailsPrefix)] ProductDetailsForm details, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
-            return await EditViewAsync(id, details, null, cancellationToken);
+            return await EditViewAsync(id, details, null, cancellationToken, ProductEditPage.DetailsForm);
 
         try
         {
@@ -64,7 +64,7 @@ public class ProductsController(IProductsClient products, ITrendyolIntegrationCl
         catch (ApiException exception)
         {
             ModelState.AddApiProblem(exception, DetailsPrefix);
-            return await EditViewAsync(id, details, null, cancellationToken);
+            return await EditViewAsync(id, details, null, cancellationToken, ProductEditPage.DetailsForm);
         }
     }
 
@@ -96,7 +96,7 @@ public class ProductsController(IProductsClient products, ITrendyolIntegrationCl
     public async Task<IActionResult> AddVariant(int id, [Bind(Prefix = NewVariantPrefix)] VariantForm variant, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
-            return await EditViewAsync(id, null, variant, cancellationToken);
+            return await EditViewAsync(id, null, variant, cancellationToken, ProductEditPage.VariantForm);
 
         try
         {
@@ -107,7 +107,7 @@ public class ProductsController(IProductsClient products, ITrendyolIntegrationCl
         catch (ApiException exception)
         {
             ModelState.AddApiProblem(exception, NewVariantPrefix, VariantAttributesText.MapApiKey);
-            return await EditViewAsync(id, null, variant, cancellationToken);
+            return await EditViewAsync(id, null, variant, cancellationToken, ProductEditPage.VariantForm);
         }
     }
 
@@ -187,7 +187,8 @@ public class ProductsController(IProductsClient products, ITrendyolIntegrationCl
     private async Task<IActionResult> CreateViewAsync(ProductDetailsForm details, VariantForm variant, CancellationToken cancellationToken) =>
         View("Create", new ProductCreatePage(details, variant, await lookups.BrandsAsync(cancellationToken), await lookups.CategoriesAsync(cancellationToken)));
 
-    private async Task<IActionResult> EditViewAsync(int id, ProductDetailsForm? details, VariantForm? newVariant, CancellationToken cancellationToken)
+    private async Task<IActionResult> EditViewAsync(
+        int id, ProductDetailsForm? details, VariantForm? newVariant, CancellationToken cancellationToken, string? activeForm = null)
     {
         ProductDetailDto product;
         try
@@ -205,7 +206,8 @@ public class ProductsController(IProductsClient products, ITrendyolIntegrationCl
             newVariant ?? new VariantForm(),
             await lookups.BrandsAsync(cancellationToken),
             await lookups.CategoriesAsync(cancellationToken),
-            await FindListingAsync(id, cancellationToken)));
+            await FindListingAsync(id, cancellationToken),
+            activeForm));
     }
 
     private async Task<ListingDto?> FindListingAsync(int id, CancellationToken cancellationToken)

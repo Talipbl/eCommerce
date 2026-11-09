@@ -369,7 +369,9 @@ dotnet user-secrets set "Cors:AllowedOrigins:0" "http://localhost:5173"
 
 Durum: 1–7 tamamlandı. Senkron ekranı: iş durumları (imleç, bekleme, son hata; sorunlu satır vurgulu), filtreli log, outbox (fiyat-stok / sipariş durumu) tekil ve toplu tekrar deneme, dört işin elle tetiklenmesi (limit aşımında bekleme süresi gösterilir). Dashboard: onay bekleyen havale, hazırlanacak/kargolanacak, bugün ve son 7 gün ciro (kanal bazında), düşük stok, senkron uyarıları; her kart ilgili listeye gider, özet alınamazsa sayfa hata mesajıyla açılır. Panel testleri: 119.
 
-**Kabul durumu:** Akışların tamamı sahte API ile test edildi; gerçek API ve Trendyol'a karşı tarayıcıda uçtan uca deneme yapılmadı (yerelde Docker kapalı). Yayın öncesi bu prova ve 6.3'teki compose ayarları gerekli.
+**Kabul durumu (2026-11-09, yerel prova):** API + panel LocalDB üzerinde çalıştırıldı (Trendyol erişilemeyen adrese yönlendirildi). Panel üzerinden giriş, kategori/marka/ürün, iki varyant, görsel yükleme ve sıralama, yayınlama; API'den havaleli site siparişi → ödeme onayı → hazırla → kargo → teslim; düşük stok dashboard'da; Trendyol hataları (erişilemiyor, eşleme yok) ekranda; senkron log/outbox; çıkış ve panel yeniden başlayınca tekrar giriş denendi, tarayıcıda yalnızca `admin_session` ve `admin_csrf` cookie'leri var. Gerçek Trendyol hesabıyla deneme yapılmadı.
+- Provada bulunan: dashboard düşük stok sorgusu SQL'e çevrilemiyordu (InMemory testleri yakalamıyor, entegrasyon testi Docker yokken atlanıyordu); ürün sayfasında yeni varyant hatası üstteki bilgi formunda görünüyordu.
+- Entegrasyon testleri Docker olmadan da çalışır: `ECOMMERCE_TEST_SQLSERVER` (ör. `Server=(localdb)\MSSQLLocalDB;Database=ECommerceIntegrationTests;Trusted_Connection=True;TrustServerCertificate=True`) verilirse o sunucuda veritabanı silinip yeniden oluşturulur. 49/49 geçti.
 
 **Kabul:** Yönetici panelden giriş yapıp ürün oluşturuyor, görsel yüklüyor, yayınlıyor; ürünü Trendyol eşlemeleriyle gönderip batch sonucunu görüyor; site ve Trendyol siparişlerini tek listede ilerletiyor; hatalı outbox kaydını tekrar deniyor. Tarayıcıda hiçbir API token'ı yok (cookie'ler ve `localStorage` kontrol edilir); access token süresi dolunca oturum kesintisiz devam ediyor; paralel isteklerde yönetici atılmıyor.
 
@@ -382,7 +384,7 @@ Durum: 1–7 tamamlandı. Senkron ekranı: iş durumları (imleç, bekleme, son 
 ### 6.3 CI ve yayın
 - [ ] CI: mevcut .NET job'ı aynen kalır (AdminPanel ve testleri solution'da olduğu için oraya dahil); `frontend/**` path filtresiyle ayrı Node job'ı (lint, build). Docker matrisine `ecommerce-admin` ve `ecommerce-storefront` eklenir.
 - [ ] Compose + Caddy: `alanadi.com` → storefront, `alanadi.com/api/*` ve `/media/*` → api, `admin.alanadi.com` → AdminPanel. Vitrin ile API aynı origin'de olduğu için CORS gerekmez ve `SameSite=Strict` refresh cookie'si sorunsuz çalışır.
-- [ ] `admin` servisi: `Api__BaseUrl=http://api:8080`, `ASPNETCORE_FORWARDEDHEADERS_ENABLED=true` (giriş limiti için gerçek istemci IP'si), `DataProtection__KeysPath=/app/keys` + `admin-keys` volume'ü, `/health/live` health check. Panel API'yi iç ağdan çağırdığı için CORS listesine eklenmez. İsteğe bağlı: Caddy'de `admin.` alt alan adına IP kısıtı veya basic auth.
+- [ ] `admin` servisi: `Api__BaseUrl=http://api:8080`, `ASPNETCORE_FORWARDEDHEADERS_ENABLED=true` (**zorunlu**: Caddy TLS'i sonlandırıyor; bu olmadan panel isteği HTTP sanar, `Secure=Always` antiforgery cookie'si yüzünden giriş sayfası 500 verir — yerel provada görüldü; ayrıca giriş limiti için gerçek istemci IP'si), `DataProtection__KeysPath=/app/keys` + `admin-keys` volume'ü, `/health/live` health check. Panel API'yi iç ağdan çağırdığı için CORS listesine eklenmez. İsteğe bağlı: Caddy'de `admin.` alt alan adına IP kısıtı veya basic auth.
 
 ---
 

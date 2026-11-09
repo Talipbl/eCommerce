@@ -63,15 +63,16 @@ public class DashboardService(
 
     private async Task<LowStockDto> LowStockAsync(DashboardOptions settings, CancellationToken cancellationToken)
     {
-        IQueryable<LowStockVariantDto> LowStock(IQueryable<Product> q) => q
+        // Sıralama DTO'ya çevirmeden önce entity alanlarıyla yapılır; kurucu ile projekte edilen alana göre sıralama SQL'e çevrilemiyor.
+        var lowStock = (IQueryable<Product> q) => q
             .Where(p => p.IsActive)
-            .SelectMany(p => p.Variants.Where(v => v.IsActive && v.StockQuantity <= settings.LowStockThreshold),
-                (p, v) => new LowStockVariantDto(p.Id, p.Name, v.Id, v.Sku, v.Barcode, v.StockQuantity));
+            .SelectMany(p => p.Variants.Where(v => v.IsActive && v.StockQuantity <= settings.LowStockThreshold), (p, v) => new { Product = p, Variant = v });
 
-        var total = await products.CountAsync(LowStock, cancellationToken);
-        var variants = await products.ListAsync(q => LowStock(q)
-            .OrderBy(v => v.StockQuantity).ThenBy(v => v.ProductName).ThenBy(v => v.Sku)
-            .Take(settings.LowStockListSize), cancellationToken);
+        var total = await products.CountAsync(lowStock, cancellationToken);
+        var variants = await products.ListAsync(q => lowStock(q)
+            .OrderBy(x => x.Variant.StockQuantity).ThenBy(x => x.Product.Name).ThenBy(x => x.Variant.Sku)
+            .Take(settings.LowStockListSize)
+            .Select(x => new LowStockVariantDto(x.Product.Id, x.Product.Name, x.Variant.Id, x.Variant.Sku, x.Variant.Barcode, x.Variant.StockQuantity)), cancellationToken);
         return new LowStockDto(settings.LowStockThreshold, total, variants);
     }
 }
