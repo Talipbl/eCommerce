@@ -1,0 +1,51 @@
+@model BatchDto
+@{
+    ViewData["Title"] = "Trendyol toplu işlem";
+    ViewData["TrendyolTab"] = "listings";
+}
+
+<h1 class="h3 mb-3">Trendyol</h1>
+<partial name="_TrendyolNav" />
+
+<h2 class="h5">Toplu işlem <code>@Model.BatchRequestId</code></h2>
+<dl class="row small">
+    <dt class="col-4 col-md-2">İşlem</dt><dd class="col-8 col-md-10">@TrendyolLabels.BatchOperation(Model.Operation)</dd>
+    <dt class="col-4 col-md-2">Durum</dt><dd class="col-8 col-md-10">@TrendyolLabels.Batch(Model.Status)</dd>
+    <dt class="col-4 col-md-2">Kalem</dt><dd class="col-8 col-md-10">@Model.ItemCount (hatalı: @Model.FailedItemCount)</dd>
+    <dt class="col-4 col-md-2">Gönderildi</dt><dd class="col-8 col-md-10">@Display.Date(Model.CreatedAt)</dd>
+    <dt class="col-4 col-md-2">Son kontrol</dt><dd class="col-8 col-md-10">@Display.Date(Model.LastCheckedAt)</dd>
+    <dt class="col-4 col-md-2">Tamamlandı</dt><dd class="col-8 col-md-10">@Display.Date(Model.CompletedAt)</dd>
+</dl>
+
+@if (Model.Status == MarketplaceBatchStatus.Expired)
+{
+    <div class="alert alert-warning">Trendyol sonuçları yaklaşık 4 saat saklıyor; bu işlemin sonucu artık alınamıyor. Ürünü yeniden gönderin.</div>
+}
+
+@if (Model.Failures.Count > 0)
+{
+    <h3 class="h6">Hatalar</h3>
+    <table class="table table-sm">
+        <thead><tr><th>Barkod</th><th>Sebep</th></tr></thead>
+        <tbody>
+            @foreach (var failure in Model.Failures)
+            {
+                <tr>
+                    <td>@(failure.Barcode ?? "—")</td>
+                    <td>
+                        <ul class="mb-0 ps-3">
+                            @foreach (var reason in failure.Reasons)
+                            {
+                                <li>@reason</li>
+                            }
+                        </ul>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else if (Model.Status == MarketplaceBatchStatus.Completed)
+{
+    <p class="text-success">Tüm kalemler başarıyla işlendi.</p>
+}

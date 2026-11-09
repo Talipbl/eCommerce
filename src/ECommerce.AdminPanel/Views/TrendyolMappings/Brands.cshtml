@@ -1,0 +1,36 @@
+@model IReadOnlyList<MappingRow>
+@{
+    ViewData["Title"] = "Trendyol marka eşleme";
+    ViewData["TrendyolTab"] = "brands";
+}
+
+<h1 class="h3 mb-3">Trendyol</h1>
+<partial name="_TrendyolNav" />
+<p class="text-body-secondary small">Ürünü Trendyol'a göndermek için markasının Trendyol'daki karşılığı seçilmiş olmalı.</p>
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead><tr><th>Marka</th><th>Trendyol markası</th><th></th></tr></thead>
+        <tbody>
+            @foreach (var row in Model)
+            {
+                <tr>
+                    <td>@row.LocalName</td>
+                    <td>
+                        @if (row.IsMapped)
+                        {
+                            @row.ExternalName <span class="text-body-secondary small">#@row.ExternalId</span>
+                        }
+                        else
+                        {
+                            <span class="badge text-bg-warning">Eşlenmedi</span>
+                        }
+                    </td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-primary" asp-action="MapBrand" asp-route-brandId="@row.LocalId">@(row.IsMapped ? "Değiştir" : "Eşle")</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

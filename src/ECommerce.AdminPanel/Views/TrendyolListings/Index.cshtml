@@ -1,0 +1,64 @@
+@model ListingListPage
+@{
+    ViewData["Title"] = "Trendyol yayınları";
+    ViewData["TrendyolTab"] = "listings";
+}
+
+<h1 class="h3 mb-3">Trendyol</h1>
+<partial name="_TrendyolNav" />
+
+<div class="d-flex flex-wrap align-items-end gap-2 mb-3">
+    <form method="get" asp-action="Index" class="d-flex gap-2 align-items-end me-auto">
+        <div>
+            <label for="status" class="form-label small">Durum</label>
+            <select id="status" name="status" class="form-select">
+                <option value="">Tümü</option>
+                @foreach (var status in Enum.GetValues<ListingStatus>())
+                {
+                    <option value="@status" selected="@(Model.Status == status)">@TrendyolLabels.Listing(status)</option>
+                }
+            </select>
+        </div>
+        <button type="submit" class="btn btn-outline-secondary">Filtrele</button>
+    </form>
+    <form method="post" asp-action="Refresh" asp-route-status="@Model.Status">
+        <button type="submit" class="btn btn-outline-primary">Durumları Trendyol'dan yenile</button>
+    </form>
+</div>
+
+@if (Model.Result.Content.Count == 0)
+{
+    <p class="text-body-secondary">Bu durumda ürün yok. Ürünler, ürün sayfasındaki "Trendyol'a gönder" ile yayınlanır.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr><th>Ürün</th><th>Durum</th><th>Açıklama</th><th>Son gönderim</th><th>Son kontrol</th><th>Toplu işlem</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var listing in Model.Result.Content)
+                {
+                    <tr>
+                        <td>
+                            <a asp-controller="Products" asp-action="Edit" asp-route-id="@listing.ProductId">@listing.ProductName</a>
+                            <div class="small text-body-secondary">@listing.ProductCode</div>
+                        </td>
+                        <td><span class="badge @TrendyolLabels.ListingBadge(listing.Status)">@TrendyolLabels.Listing(listing.Status)</span></td>
+                        <td class="small">@listing.StatusMessage</td>
+                        <td class="text-nowrap small">@Display.Date(listing.LastSubmittedAt)</td>
+                        <td class="text-nowrap small">@Display.Date(listing.LastCheckedAt)</td>
+                        <td class="small">
+                            @if (listing.LastBatchRequestId is not null)
+                            {
+                                <a asp-action="Batch" asp-route-batchRequestId="@listing.LastBatchRequestId">Sonuç</a>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_Pager" model="Model.Pager" />
+}

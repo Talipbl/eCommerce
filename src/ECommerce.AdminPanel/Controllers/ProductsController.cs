@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ECommerce.AdminPanel.Controllers;
 
 [Route("products")]
-public class ProductsController(IProductsClient products, CatalogLookups lookups) : PanelController
+public class ProductsController(IProductsClient products, ITrendyolIntegrationClient trendyol, CatalogLookups lookups) : PanelController
 {
     private const int PageSize = 20;
     private const long MaxUploadSize = 5 * 1024 * 1024;
@@ -159,6 +159,15 @@ public class ProductsController(IProductsClient products, CatalogLookups lookups
         return RunAsync(id, () => products.ReorderImagesAsync(id, new ReorderImagesRequest { ImageIds = order }, cancellationToken), "Görsel sırası kaydedildi.");
     }
 
+    /// <summary>
+    /// Ürünü kategori ve marka eşlemeleriyle Trendyol'a gönderir; özellikler kategori eşlemesinden çözülür.
+    /// Eksik eşleme veya zorunlu özellik API tarafından reddedilir ve sebep bildirim olarak gösterilir.
+    /// </summary>
+    [HttpPost("{id:int}/trendyol")]
+    public Task<IActionResult> PublishToTrendyol(int id, int? deliveryDuration, CancellationToken cancellationToken) =>
+        RunAsync(id, () => trendyol.PublishAsync(id, new PublishListingRequest { DeliveryDuration = deliveryDuration }, cancellationToken),
+            "Ürün Trendyol'a gönderildi. Sonuç birkaç dakika içinde gelir; Trendyol yayınları sayfasından takip edebilirsiniz.");
+
     // Formsuz işlemler: sonuç ürün sayfasında bildirim olarak gösterilir.
     private async Task<IActionResult> RunAsync(int id, Func<Task> action, string success)
     {
@@ -195,7 +204,20 @@ public class ProductsController(IProductsClient products, CatalogLookups lookups
             details ?? ProductDetailsForm.From(product),
             newVariant ?? new VariantForm(),
             await lookups.BrandsAsync(cancellationToken),
-            await lookups.CategoriesAsync(cancellationToken)));
+            await lookups.CategoriesAsync(cancellationToken),
+            await FindListingAsync(id, cancellationToken)));
+    }
+
+    private async Task<ListingDto?> FindListingAsync(int id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await trendyol.GetListingAsync(id, cancellationToken);
+        }
+        catch (ApiException exception) when (exception.StatusCode == StatusCodes.Status404NotFound)
+        {
+            return null;
+        }
     }
 
     // API oluşturma isteğinde varyantlar liste: "Variants[0].Sku" → "Variant.Sku", ürün alanları → "Details.Name".

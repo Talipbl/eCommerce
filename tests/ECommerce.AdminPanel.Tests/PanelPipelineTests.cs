@@ -41,9 +41,16 @@ public class PanelPipelineTests
     [InlineData("/orders", true)]
     [InlineData("/orders/1", true)]
     [InlineData("/orders/2", true)]
+    [InlineData("/trendyol/listings", true)]
+    [InlineData("/trendyol/brands", true)]
+    [InlineData("/trendyol/brands/1", true)]
+    [InlineData("/trendyol/categories", true)]
+    [InlineData("/trendyol/categories/11", true)]
+    [InlineData("/trendyol/categories/11/attributes?all=true", true)]
+    [InlineData("/trendyol/batches/batch-1", true)]
     public async Task Pages_have_no_inline_scripts_or_styles(string path, bool signedIn)
     {
-        await using var factory = new PanelFactory(api: OrderApi.Register(CatalogApi.Create()));
+        await using var factory = new PanelFactory(api: TrendyolApi.Register(OrderApi.Register(CatalogApi.Create())));
         var client = factory.CreatePanelClient();
         if (signedIn)
             await PanelFactory.LoginAsync(client, Ct);

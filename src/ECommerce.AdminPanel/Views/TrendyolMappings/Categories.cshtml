@@ -1,0 +1,37 @@
+@model IReadOnlyList<MappingRow>
+@{
+    ViewData["Title"] = "Trendyol kategori eşleme";
+    ViewData["TrendyolTab"] = "categories";
+}
+
+<h1 class="h3 mb-3">Trendyol</h1>
+<partial name="_TrendyolNav" />
+<p class="text-body-secondary small">
+    Ürün yalnızca en alt seviye (leaf) Trendyol kategorisine eklenebilir. Kategori eşlendikten sonra zorunlu özellikleri eşleyin;
+    ürün gönderilirken bu eşleme kullanılır.
+</p>
+
+<ul class="list-group category-tree">
+    @foreach (var row in Model)
+    {
+        <li class="list-group-item d-flex flex-wrap align-items-center gap-2 depth-@Math.Min(row.Depth, 5)">
+            <span class="me-auto">
+                @row.LocalName
+                @if (row.IsMapped)
+                {
+                    <span class="text-body-secondary small">→ @row.ExternalName</span>
+                    <span class="badge text-bg-light border ms-1">@row.AttributeCount özellik</span>
+                }
+                else
+                {
+                    <span class="badge text-bg-warning ms-1">Eşlenmedi</span>
+                }
+            </span>
+            <a class="btn btn-sm btn-outline-primary" asp-action="MapCategory" asp-route-categoryId="@row.LocalId">@(row.IsMapped ? "Kategoriyi değiştir" : "Eşle")</a>
+            @if (row.IsMapped)
+            {
+                <a class="btn btn-sm btn-outline-secondary" asp-action="Attributes" asp-route-categoryId="@row.LocalId">Özellikler</a>
+            }
+        </li>
+    }
+</ul>

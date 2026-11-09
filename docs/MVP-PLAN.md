@@ -336,6 +336,11 @@ dotnet user-secrets set "Cors:AllowedOrigins:0" "http://localhost:5173"
 - [x] Trendyol siparişinde iptal düğmesi yok: API yerel iptali Trendyol'a bildirmiyor (outbox yalnızca Picking/Invoiced). İptal Trendyol panelinden yapılır, senkronla yansır. **Açık karar:** API'nin pazaryeri siparişinin panelden iptalini reddetmesi gerekip gerekmediği.
 - [x] Bulunan hata: veritabanından okunan tarihler `Kind=Unspecified` geliyordu, API "Z" eki olmadan yazıyordu; client'lar yerel saat sanıyordu (geliştirme makinesinde 3 saat kayma). Tüm `DateTime` alanlarına okumada UTC dönüştürücüsü (`UtcDateTimeConverter`, migration gerekmedi). `OrderDto`'ya `InvoiceNumber` eklendi.
 
+**Trendyol ekranları (6.1.5 adım 6) — tamamlandı**
+- [x] Marka ve kategori eşleme: yerel liste + eşlenme durumu; Trendyol'da arama (marka adıyla / kategori adıyla ön dolu, kategori sonuçlarında tam yol) ve sonuçtan seçim. Kategori eşlenince özellik sayfasına geçilir.
+- [x] Özellik eşleme: zorunlu, varyant belirleyen ve zaten eşlenmiş özellikler her zaman; isteğe bağlılar "tümünü göster" ile (API eşlemeyi topluca değiştirdiği için eşli bir özellik hiç gizlenmez). Satır başına sabit değer veya yerel varyant özelliği + değer eşlemeleri. Trendyol değeri adıyla yazılır (özellik başına bir `<datalist>`), sunucuda Türkçe büyük/küçük harf duyarsız değer numarasına çevrilir; listede yoksa serbest değer kabul eden özellikte serbest değer olur, etmeyende alan hatası. Değer listeleri yalnızca gösterilen özellikler için çekilir.
+- [x] Yayınlar: duruma göre liste, red/hata sebebi, batch sonuç sayfası (hatalı barkodlar ve sebepler, 4 saat sonra "süresi doldu" uyarısı), "Durumları Trendyol'dan yenile". Ürün detayında Trendyol bölümü: durum, mesaj, "Trendyol'a gönder / yeniden gönder" (kargoya veriliş süresi isteğe bağlı); işlemde veya kabul edilmiş üründe düğme yok.
+
 **6.1.4 Ekranlar ve kullandıkları uçlar**
 
 | Ekran | İçerik | API |

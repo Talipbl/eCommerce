@@ -8,7 +8,8 @@ public sealed record ProductEditPage(
     ProductDetailsForm Details,
     VariantForm NewVariant,
     IReadOnlyList<BrandDto> Brands,
-    IReadOnlyList<CategoryOption> Categories)
+    IReadOnlyList<CategoryOption> Categories,
+    ListingDto? Listing = null)
 {
     public const int MaxImages = 8;
 

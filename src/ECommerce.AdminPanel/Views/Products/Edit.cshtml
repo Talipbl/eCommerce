@@ -137,3 +137,51 @@
         }
     </div>
 </section>
+
+<section class="card mb-3" aria-labelledby="trendyol-title">
+    <div class="card-body">
+        <h2 id="trendyol-title" class="h5 card-title">Trendyol</h2>
+        @if (Model.Listing is { } listing)
+        {
+            <p class="mb-1">
+                <span class="badge @TrendyolLabels.ListingBadge(listing.Status)">@TrendyolLabels.Listing(listing.Status)</span>
+                <span class="small text-body-secondary ms-1">Son gönderim: @Display.Date(listing.LastSubmittedAt) · Son kontrol: @Display.Date(listing.LastCheckedAt)</span>
+            </p>
+            @if (listing.StatusMessage is not null)
+            {
+                <div class="alert alert-danger small mb-2">@listing.StatusMessage</div>
+            }
+            @if (listing.LastBatchRequestId is not null)
+            {
+                <a class="small" asp-controller="TrendyolListings" asp-action="Batch" asp-route-batchRequestId="@listing.LastBatchRequestId">Toplu işlem sonucu</a>
+            }
+        }
+        else
+        {
+            <p class="small text-body-secondary mb-2">Ürün henüz Trendyol'a gönderilmedi.</p>
+        }
+
+        @if (TrendyolLabels.CanPublish(Model.Listing?.Status))
+        {
+            <form method="post" asp-action="PublishToTrendyol" asp-route-id="@product.Id" class="row g-2 align-items-end mt-1">
+                <div class="col-6 col-md-3">
+                    <label for="deliveryDuration" class="form-label small">Kargoya veriliş süresi (gün)</label>
+                    <input id="deliveryDuration" name="deliveryDuration" type="number" min="1" max="15" class="form-control"
+                           value="@Model.Listing?.DeliveryDuration" placeholder="Varsayılan" />
+                </div>
+                <div class="col-6 col-md-3">
+                    <button type="submit" class="btn btn-outline-primary w-100">@(Model.Listing is null ? "Trendyol'a gönder" : "Yeniden gönder")</button>
+                </div>
+                <div class="col-12 form-text">
+                    Kategori, marka ve zorunlu özellik eşlemeleri kullanılır:
+                    <a asp-controller="TrendyolMappings" asp-action="Attributes" asp-route-categoryId="@product.CategoryId">kategori özellikleri</a>,
+                    <a asp-controller="TrendyolMappings" asp-action="Brands">marka eşleme</a>.
+                </div>
+            </form>
+        }
+        else
+        {
+            <p class="small text-body-secondary mb-0">Ürün Trendyol'da işlemde veya kabul edildi, yeniden gönderilemez. Kabul edildikten sonra fiyat ve stok değişiklikleri otomatik gönderilir.</p>
+        }
+    </div>
+</section>

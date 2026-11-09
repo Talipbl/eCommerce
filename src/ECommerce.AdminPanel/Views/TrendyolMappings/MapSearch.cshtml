@@ -1,0 +1,64 @@
+@model MappingSearchPage
+@{
+    var isCategory = ViewContext.RouteData.Values["action"] as string == "MapCategory";
+    var kind = isCategory ? "kategori" : "marka";
+    ViewData["Title"] = $"{Model.Local.LocalName} — Trendyol {kind} eşleme";
+    ViewData["TrendyolTab"] = isCategory ? "categories" : "brands";
+}
+
+<h1 class="h3 mb-3">Trendyol</h1>
+<partial name="_TrendyolNav" />
+
+<h2 class="h5">@Model.Local.LocalName</h2>
+<p class="small">
+    Şu anki eşleme:
+    @if (Model.Local.IsMapped)
+    {
+        <strong>@Model.Local.ExternalName</strong>
+        @if (isCategory)
+        {
+            <span class="text-body-secondary">— kategoriyi değiştirmek özellik eşlemelerini siler.</span>
+        }
+    }
+    else
+    {
+        <span class="badge text-bg-warning">Eşlenmedi</span>
+    }
+</p>
+
+<form method="get" class="d-flex gap-2 mb-3" role="search">
+    <input type="search" name="q" value="@Model.Query" class="form-control" aria-label="Trendyol'da ara" />
+    <button type="submit" class="btn btn-outline-secondary">Trendyol'da ara</button>
+</form>
+
+@if (Model.Error is not null)
+{
+    <div class="alert alert-danger" role="alert">@Model.Error</div>
+}
+else if (Model.Results.Count == 0)
+{
+    <p class="text-body-secondary">"@Model.Query" için sonuç yok. Daha kısa bir arama deneyin.</p>
+}
+else
+{
+    <ul class="list-group">
+        @foreach (var result in Model.Results)
+        {
+            <li class="list-group-item d-flex align-items-center gap-2">
+                <span class="me-auto">
+                    @result.Name
+                    @if (result.Path is not null)
+                    {
+                        <div class="small text-body-secondary">@result.Path</div>
+                    }
+                </span>
+                <form method="post">
+                    <input type="hidden" name="externalId" value="@result.Id" />
+                    <input type="hidden" name="externalName" value="@result.Name" />
+                    <button type="submit" class="btn btn-sm @(result.Id == Model.Local.ExternalId ? "btn-success" : "btn-outline-primary")"
+                            disabled="@(result.Id == Model.Local.ExternalId)">@(result.Id == Model.Local.ExternalId ? "Seçili" : "Seç")</button>
+                </form>
+            </li>
+        }
+    </ul>
+}
