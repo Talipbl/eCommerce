@@ -35,6 +35,7 @@ public record OrderDto(
     string? Note,
     string? CargoProvider,
     string? TrackingNumber,
+    string? InvoiceNumber,
     string? CancelReason,
     DateTime PlacedAt,
     DateTime? PaidAt,
