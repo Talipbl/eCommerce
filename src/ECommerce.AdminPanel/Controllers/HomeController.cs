@@ -1,3 +1,5 @@
+using ECommerce.AdminPanel.Api;
+using ECommerce.AdminPanel.Infrastructure;
 using ECommerce.AdminPanel.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -5,9 +7,19 @@ using System.Diagnostics;
 
 namespace ECommerce.AdminPanel.Controllers;
 
-public class HomeController : Controller
+public class HomeController(IDashboardClient dashboard) : Controller
 {
-    public IActionResult Index() => View();
+    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    {
+        try
+        {
+            return View(new DashboardPage(await dashboard.SummaryAsync(cancellationToken), null));
+        }
+        catch (ApiException exception)
+        {
+            return View(new DashboardPage(null, ApiProblem.From(exception).Describe()));
+        }
+    }
 
     [AllowAnonymous]
     [Route("error/{statusCode:int?}")]

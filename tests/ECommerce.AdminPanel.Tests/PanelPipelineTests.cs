@@ -48,9 +48,12 @@ public class PanelPipelineTests
     [InlineData("/trendyol/categories/11", true)]
     [InlineData("/trendyol/categories/11/attributes?all=true", true)]
     [InlineData("/trendyol/batches/batch-1", true)]
+    [InlineData("/sync", true)]
+    [InlineData("/sync/logs", true)]
+    [InlineData("/sync/outbox/Inventory", true)]
     public async Task Pages_have_no_inline_scripts_or_styles(string path, bool signedIn)
     {
-        await using var factory = new PanelFactory(api: TrendyolApi.Register(OrderApi.Register(CatalogApi.Create())));
+        await using var factory = new PanelFactory(api: SyncApi.Register(TrendyolApi.Register(OrderApi.Register(CatalogApi.Create()))));
         var client = factory.CreatePanelClient();
         if (signedIn)
             await PanelFactory.LoginAsync(client, Ct);

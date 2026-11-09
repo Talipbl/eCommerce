@@ -1,0 +1,70 @@
+@model OutboxPage
+@{
+    ViewData["Title"] = $"Outbox: {SyncLabels.Outbox(Model.Kind)}";
+    ViewData["SyncTab"] = Model.Kind.ToString();
+}
+
+<partial name="_SyncNav" />
+
+<p class="text-body-secondary small">
+    Pazaryerine gönderilecek kayıtlar. Geçici hatalar artan beklemeyle tekrar denenir; 5 denemeden sonra veya kalıcı hatada kayıt "Hatalı" olur
+    ve sebebi düzeltildikten sonra elle yeniden kuyruğa alınır.
+</p>
+
+<div class="d-flex flex-wrap align-items-end gap-2 mb-3">
+    <form method="get" asp-action="Outbox" asp-route-kind="@Model.Kind" class="d-flex gap-2 align-items-end me-auto">
+        <div>
+            <label for="status" class="form-label small">Durum</label>
+            <select id="status" name="status" class="form-select">
+                <option value="">Tümü</option>
+                @foreach (var status in Enum.GetValues<OutboxStatus>())
+                {
+                    <option value="@status" selected="@(Model.Status == status)">@SyncLabels.OutboxStatusLabel(status)</option>
+                }
+            </select>
+        </div>
+        <button type="submit" class="btn btn-outline-secondary">Filtrele</button>
+    </form>
+    <form method="post" asp-action="RetryFailed" asp-route-kind="@Model.Kind" data-confirm="Tüm hatalı kayıtlar yeniden kuyruğa alınsın mı?">
+        <button type="submit" class="btn btn-outline-primary">Tüm hatalıları tekrar dene</button>
+    </form>
+</div>
+
+@if (Model.Result.Content.Count == 0)
+{
+    <p class="text-body-secondary">Kayıt yok.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-sm align-middle">
+            <thead>
+                <tr><th>#</th><th>Referans</th><th>İşlem</th><th>Durum</th><th class="text-end">Deneme</th><th>Sonraki deneme</th><th>Oluşturuldu</th><th>Hata</th><th></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var entry in Model.Result.Content)
+                {
+                    <tr>
+                        <td>@entry.Id</td>
+                        <td class="small">@entry.Reference</td>
+                        <td class="small">@entry.Action</td>
+                        <td><span class="badge @SyncLabels.OutboxBadge(entry.Status)">@SyncLabels.OutboxStatusLabel(entry.Status)</span></td>
+                        <td class="text-end">@entry.Attempts</td>
+                        <td class="text-nowrap small">@Display.Date(entry.NextAttemptAt)</td>
+                        <td class="text-nowrap small">@Display.Date(entry.CreatedDate)</td>
+                        <td class="small">@entry.Error</td>
+                        <td>
+                            @if (entry.Status == OutboxStatus.Failed)
+                            {
+                                <form method="post" asp-action="Retry" asp-route-kind="@Model.Kind" asp-route-id="@entry.Id" asp-route-status="@Model.Status">
+                                    <button type="submit" class="btn btn-sm btn-outline-primary">Tekrar dene</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_Pager" model="Model.Pager" />
+}

@@ -367,6 +367,10 @@ dotnet user-secrets set "Cors:AllowedOrigins:0" "http://localhost:5173"
 6. Trendyol eşleştirme + yayın ekranları (1,5–2 gün)
 7. Senkron ekranı + dashboard (1 gün)
 
+Durum: 1–7 tamamlandı. Senkron ekranı: iş durumları (imleç, bekleme, son hata; sorunlu satır vurgulu), filtreli log, outbox (fiyat-stok / sipariş durumu) tekil ve toplu tekrar deneme, dört işin elle tetiklenmesi (limit aşımında bekleme süresi gösterilir). Dashboard: onay bekleyen havale, hazırlanacak/kargolanacak, bugün ve son 7 gün ciro (kanal bazında), düşük stok, senkron uyarıları; her kart ilgili listeye gider, özet alınamazsa sayfa hata mesajıyla açılır. Panel testleri: 119.
+
+**Kabul durumu:** Akışların tamamı sahte API ile test edildi; gerçek API ve Trendyol'a karşı tarayıcıda uçtan uca deneme yapılmadı (yerelde Docker kapalı). Yayın öncesi bu prova ve 6.3'teki compose ayarları gerekli.
+
 **Kabul:** Yönetici panelden giriş yapıp ürün oluşturuyor, görsel yüklüyor, yayınlıyor; ürünü Trendyol eşlemeleriyle gönderip batch sonucunu görüyor; site ve Trendyol siparişlerini tek listede ilerletiyor; hatalı outbox kaydını tekrar deniyor. Tarayıcıda hiçbir API token'ı yok (cookie'ler ve `localStorage` kontrol edilir); access token süresi dolunca oturum kesintisiz devam ediyor; paralel isteklerde yönetici atılmıyor.
 
 ### 6.2 Vitrin (`frontend/storefront`, React + Next.js + TypeScript)
