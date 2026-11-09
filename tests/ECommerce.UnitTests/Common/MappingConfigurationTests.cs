@@ -11,4 +11,12 @@ public class MappingConfigurationTests
 
         Should.NotThrow(() => config.Compile());
     }
+
+    [Fact]
+    public void Projection_mappings_compile()
+    {
+        var config = MappingRegistration.CreateConfig();
+
+        Should.NotThrow(() => config.CompileProjection());
+    }
 }

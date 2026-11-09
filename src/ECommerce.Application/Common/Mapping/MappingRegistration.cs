@@ -8,7 +8,13 @@ public static class MappingRegistration
 {
     public static TypeAdapterConfig CreateConfig()
     {
-        var config = new TypeAdapterConfig();
+        // Her eşleme bir IRegister'da açıkça tanımlanır; eksik ya da kaynaksız alan Compile() sırasında hata verir.
+        var config = new TypeAdapterConfig
+        {
+            RequireExplicitMapping = true,
+            RequireDestinationMemberSource = true
+        };
+        config.Default.ShallowCopyForSameType(true);
         config.Scan(typeof(MappingRegistration).Assembly);
         return config;
     }

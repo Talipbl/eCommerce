@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
+using ECommerce.UnitTests.Common;
 
 namespace ECommerce.UnitTests.Customers;
 
@@ -25,8 +26,8 @@ public sealed class CustomerServiceTests : IAsyncDisposable
         _context = PersistenceTestContext.Create(_clock);
         var customers = new EfRepository<Customer>(_context);
         _auth = new CustomerAuthService(customers, new EfRepository<CustomerRefreshToken>(_context), _context,
-            new PasswordHasher<Customer>(), new JwtTokenService(Options.Create(AuthTestHarness.Jwt)), Options.Create(AuthTestHarness.Auth), _clock);
-        _addresses = new CustomerAddressService(customers, _context);
+            new PasswordHasher<Customer>(), new JwtTokenService(Options.Create(AuthTestHarness.Jwt)), Options.Create(AuthTestHarness.Auth), _clock, TestMapper.Instance);
+        _addresses = new CustomerAddressService(customers, _context, TestMapper.Instance);
     }
 
     private static RegisterCustomerRequest Registration(string email = "ali@example.com") =>

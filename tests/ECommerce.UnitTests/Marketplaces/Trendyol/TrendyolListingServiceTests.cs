@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Time.Testing;
 using NSubstitute;
 using Trendyol.Client.Products;
+using ECommerce.UnitTests.Common;
 
 namespace ECommerce.UnitTests.Marketplaces.Trendyol;
 
@@ -25,7 +26,7 @@ public sealed class TrendyolListingServiceTests : IAsyncLifetime
     private TrendyolListingService Service(IMediaUrlBuilder? media = null) => new(
         new EfRepository<MarketplaceListing>(_db.Context), new EfRepository<MarketplaceCategoryMapping>(_db.Context),
         new EfRepository<MarketplaceBrandMapping>(_db.Context), new EfRepository<MarketplaceBatchRequest>(_db.Context),
-        _db.Products, _db.Categories, _db.Brands, new EfRepository<MarketplaceSyncLog>(_db.Context), _db.Context, _products, _catalog, media ?? _db.Media, _clock);
+        _db.Products, _db.Categories, _db.Brands, new EfRepository<MarketplaceSyncLog>(_db.Context), _db.Context, _products, _catalog, media ?? _db.Media, _clock, TestMapper.Instance);
 
     public async ValueTask InitializeAsync()
     {

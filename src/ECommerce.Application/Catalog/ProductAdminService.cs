@@ -2,6 +2,7 @@ using ECommerce.Application.Common;
 using ECommerce.Catalog;
 using ECommerce.Core.Persistence;
 using ECommerce.Core.Text;
+using MapsterMapper;
 
 namespace ECommerce.Application.Catalog;
 
@@ -11,7 +12,8 @@ public class ProductAdminService(
     IRepository<Brand> brands,
     IRepository<Category> categories,
     IUnitOfWork unitOfWork,
-    IMediaUrlBuilder media) : IProductAdminService
+    IMediaUrlBuilder media,
+    IMapper mapper) : IProductAdminService
 {
     public async Task<PagedResult<ProductListItemDto>> ListAsync(ProductAdminQuery query, CancellationToken cancellationToken = default)
     {
@@ -173,9 +175,6 @@ public class ProductAdminService(
 
     private static Result<ProductDetailDto> NotFound() => Result<ProductDetailDto>.NotFound("Ürün bulunamadı.");
 
-    internal ProductDetailDto ToDetail(Product p) => new(
-        p.Id, p.Name, p.Slug, p.ProductCode, p.BrandId, p.CategoryId, p.VatRate, p.Description, p.IsActive,
-        p.Variants.Select(v => new VariantDto(v.Id, v.Sku, v.Barcode, v.Price, v.ListPrice, v.StockQuantity, v.IsActive,
-            v.Attributes.Select(a => new VariantAttributeDto(a.Name, a.Value)).ToList())).ToList(),
-        p.Images.OrderBy(i => i.SortOrder).Select(i => new ProductImageDto(i.Id, media.ToPublicUrl(i.Path), i.AltText, i.SortOrder)).ToList());
+    internal ProductDetailDto ToDetail(Product p) =>
+        mapper.From(p).AddParameters(MappingParameters.Media, media).AdaptToType<ProductDetailDto>();
 }

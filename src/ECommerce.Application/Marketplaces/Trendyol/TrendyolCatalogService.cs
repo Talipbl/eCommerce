@@ -1,3 +1,4 @@
+using MapsterMapper;
 using Microsoft.Extensions.Caching.Memory;
 using System.Globalization;
 using Trendyol.Client.Catalog;
@@ -7,7 +8,7 @@ namespace ECommerce.Application.Marketplaces.Trendyol;
 /// <summary>
 /// Trendyol referans verileri. Servis limiti düşük olduğu için başarılı cevaplar önbelleğe alınır, hatalar alınmaz.
 /// </summary>
-public class TrendyolCatalogService(ITrendyolCatalogClient client, IMemoryCache cache) : ITrendyolCatalogService
+public class TrendyolCatalogService(ITrendyolCatalogClient client, IMemoryCache cache, IMapper mapper) : ITrendyolCatalogService
 {
     private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(6);
     private static readonly CompareInfo Turkish = CultureInfo.GetCultureInfo("tr-TR").CompareInfo;
@@ -39,7 +40,7 @@ public class TrendyolCatalogService(ITrendyolCatalogClient client, IMemoryCache 
         CachedAsync($"trendyol:categories:{categoryId}:attributes", async () =>
             (await client.GetCategoryAttributesAsync(categoryId, cancellationToken))
                 .ToMarketplaceResult<TrendyolCategoryAttributes, IReadOnlyList<CategoryAttributeDto>>(a => (a.CategoryAttributes ?? [])
-                    .Select(x => new CategoryAttributeDto(x.Attribute.Id, x.Attribute.Name, x.Required, x.AllowCustom, x.Varianter, x.Slicer, x.AllowMultipleAttributeValues))
+                    .Select(mapper.Map<CategoryAttributeDto>)
                     .ToList()));
 
     public Task<MarketplaceResult<IReadOnlyList<AttributeValueDto>>> GetAttributeValuesAsync(long categoryId, long attributeId, CancellationToken cancellationToken = default) =>
@@ -54,7 +55,7 @@ public class TrendyolCatalogService(ITrendyolCatalogClient client, IMemoryCache 
                 if (!response.IsSuccess)
                     return MarketplaceResult<IReadOnlyList<AttributeValueDto>>.Failure(MarketplaceResultExtensions.ToError(response.StatusCode, response.Error));
 
-                values.AddRange((response.Data!.Content ?? []).Select(v => new AttributeValueDto(v.AttributeValueId, v.AttributeValue)));
+                values.AddRange((response.Data!.Content ?? []).Select(mapper.Map<AttributeValueDto>));
                 if (page + 1 >= response.Data.TotalPages)
                     break;
             }
@@ -69,7 +70,7 @@ public class TrendyolCatalogService(ITrendyolCatalogClient client, IMemoryCache 
 
         return await CachedAsync($"trendyol:brands:{name.Trim()}", async () =>
             (await client.SearchBrandsAsync(name.Trim(), cancellationToken))
-                .ToMarketplaceResult<IReadOnlyList<TrendyolBrand>, IReadOnlyList<TrendyolBrandDto>>(brands => brands.Select(b => new TrendyolBrandDto(b.Id, b.Name)).ToList()));
+                .ToMarketplaceResult<IReadOnlyList<TrendyolBrand>, IReadOnlyList<TrendyolBrandDto>>(brands => brands.Select(mapper.Map<TrendyolBrandDto>).ToList()));
     }
 
     private async Task<MarketplaceResult<T>> CachedAsync<T>(string key, Func<Task<MarketplaceResult<T>>> factory)

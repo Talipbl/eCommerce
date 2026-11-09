@@ -7,6 +7,7 @@ using Microsoft.Extensions.Time.Testing;
 using NSubstitute;
 using Trendyol.Client;
 using Trendyol.Client.Products;
+using ECommerce.UnitTests.Common;
 
 namespace ECommerce.UnitTests.Marketplaces.Trendyol;
 
@@ -21,7 +22,7 @@ public sealed class TrendyolBatchServiceTests : IAsyncDisposable
     public TrendyolBatchServiceTests()
     {
         _context = PersistenceTestContext.Create(_clock);
-        _service = new TrendyolBatchService(_client, new EfRepository<MarketplaceBatchRequest>(_context), _context, _clock);
+        _service = new TrendyolBatchService(_client, new EfRepository<MarketplaceBatchRequest>(_context), _context, _clock, TestMapper.Instance);
     }
 
     [Fact]

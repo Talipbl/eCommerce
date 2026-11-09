@@ -5,6 +5,7 @@ using ECommerce.Core.Persistence;
 using ECommerce.Customers;
 using ECommerce.Ordering;
 using ECommerce.Shopping;
+using MapsterMapper;
 using Microsoft.Extensions.Options;
 
 namespace ECommerce.Application.Ordering;
@@ -20,7 +21,8 @@ public class CheckoutService(
     IRepository<Order> orders,
     IUnitOfWork unitOfWork,
     IOptions<CheckoutOptions> options,
-    TimeProvider clock) : ICheckoutService
+    TimeProvider clock,
+    IMapper mapper) : ICheckoutService
 {
     private readonly CheckoutOptions _options = options.Value;
 
@@ -75,7 +77,7 @@ public class CheckoutService(
             return Result<OrderDto>.Conflict("Sepetinizdeki ürünlerin stoğu bu sırada değişti; lütfen sepeti kontrol edip tekrar deneyin.");
         }
 
-        return Result<OrderDto>.Success(order.ToDto(_options));
+        return Result<OrderDto>.Success(mapper.ToOrderDto(order, _options));
     }
 
     private CheckoutPreviewDto Totals(decimal subtotal, PaymentMethod method)

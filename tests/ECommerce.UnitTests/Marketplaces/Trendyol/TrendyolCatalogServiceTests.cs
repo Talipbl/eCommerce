@@ -4,6 +4,7 @@ using Microsoft.Extensions.Caching.Memory;
 using NSubstitute;
 using Trendyol.Client;
 using Trendyol.Client.Catalog;
+using ECommerce.UnitTests.Common;
 
 namespace ECommerce.UnitTests.Marketplaces.Trendyol;
 
@@ -15,7 +16,7 @@ public class TrendyolCatalogServiceTests
 
     public TrendyolCatalogServiceTests()
     {
-        _service = new TrendyolCatalogService(_client, new MemoryCache(new MemoryCacheOptions()));
+        _service = new TrendyolCatalogService(_client, new MemoryCache(new MemoryCacheOptions()), TestMapper.Instance);
         _client.GetCategoryTreeAsync(Arg.Any<CancellationToken>()).Returns(TrendyolResponse<TrendyolCategoryTree>.Success(200, new TrendyolCategoryTree(
         [
             new TrendyolCategory(1, "Giyim", null,

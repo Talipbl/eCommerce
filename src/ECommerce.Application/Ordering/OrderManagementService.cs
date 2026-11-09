@@ -4,6 +4,7 @@ using ECommerce.Core.Persistence;
 using ECommerce.Marketplaces;
 using ECommerce.Ordering;
 using FluentValidation;
+using MapsterMapper;
 using Microsoft.Extensions.Options;
 
 namespace ECommerce.Application.Ordering;
@@ -15,7 +16,8 @@ public class OrderManagementService(
     IRepository<MarketplaceOrderStatusUpdate> statusUpdates,
     IUnitOfWork unitOfWork,
     IOptions<CheckoutOptions> options,
-    TimeProvider clock) : IOrderManagementService
+    TimeProvider clock,
+    IMapper mapper) : IOrderManagementService
 {
     private readonly CheckoutOptions _options = options.Value;
 
@@ -27,7 +29,7 @@ public class OrderManagementService(
     public async Task<Result<OrderDto>> GetForCustomerAsync(int customerId, string orderNumber, CancellationToken cancellationToken = default)
     {
         var order = await orders.FirstOrDefaultAsync(o => o.CustomerId == customerId && o.OrderNumber == orderNumber, cancellationToken);
-        return order is null ? NotFound() : Result<OrderDto>.Success(order.ToDto(_options));
+        return order is null ? NotFound() : Result<OrderDto>.Success(mapper.ToOrderDto(order, _options));
     }
 
     public async Task<Result<OrderDto>> CancelByCustomerAsync(int customerId, string orderNumber, CancellationToken cancellationToken = default)
@@ -54,7 +56,7 @@ public class OrderManagementService(
     public async Task<Result<OrderDto>> GetAsync(int id, CancellationToken cancellationToken = default)
     {
         var order = await FindAsync(id, cancellationToken);
-        return order is null ? NotFound() : Result<OrderDto>.Success(order.ToDto(_options));
+        return order is null ? NotFound() : Result<OrderDto>.Success(mapper.ToOrderDto(order, _options));
     }
 
     public Task<Result<OrderDto>> ConfirmPaymentAsync(int id, CancellationToken cancellationToken = default) =>
@@ -105,7 +107,7 @@ public class OrderManagementService(
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return Result<OrderDto>.Success(order.ToDto(_options));
+        return Result<OrderDto>.Success(mapper.ToOrderDto(order, _options));
     }
 
     private async Task<Result<OrderDto>> ChangeAsync(int id, Action<Order> change, CancellationToken cancellationToken)
@@ -116,7 +118,7 @@ public class OrderManagementService(
 
         change(order);
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return Result<OrderDto>.Success(order.ToDto(_options));
+        return Result<OrderDto>.Success(mapper.ToOrderDto(order, _options));
     }
 
     private async Task<PagedResult<OrderSummaryDto>> PageAsync(Func<IQueryable<Order>, IQueryable<Order>> filter, int page, int size, CancellationToken cancellationToken)
@@ -125,7 +127,7 @@ public class OrderManagementService(
         page = Math.Max(page, 0);
         var total = await orders.CountAsync(q => filter(q), cancellationToken);
         var items = await orders.ListAsync(q => filter(q).OrderByDescending(o => o.PlacedAt).ThenByDescending(o => o.Id).Skip(page * size).Take(size), cancellationToken);
-        return new PagedResult<OrderSummaryDto>(page, size, total, items.Select(o => o.ToSummary()).ToList());
+        return new PagedResult<OrderSummaryDto>(page, size, total, items.Select(mapper.Map<OrderSummaryDto>).ToList());
     }
 
     private Task<Order?> FindAsync(int id, CancellationToken cancellationToken) => orders.FirstOrDefaultAsync(o => o.Id == id, cancellationToken);

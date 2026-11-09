@@ -10,6 +10,7 @@ Yeni kod bu düzene uyar. Gerekçe ve geçmiş için bkz. [YAPI-DUZENLEME-PLANI.
 <Özellik>/
   Dtos/<Alan>Dtos.cs              servis başına request + response record'ları
   Validators/<Alan>Validators.cs  DTO dosyasıyla eşleşen validator'lar
+  Mappings/<Özellik>MappingConfig.cs  Mapster IRegister eşlemeleri
   IXxxService.cs                  yalnızca interface
   XxxService.cs                   yalnızca implementasyon
   XxxOptions.cs, yardımcılar      her biri kendi dosyasında
@@ -22,6 +23,8 @@ Common/
 - **Namespace özellik seviyesindedir:** `Catalog/Dtos/BrandDtos.cs` → `ECommerce.Application.Catalog`. `Dtos/` ve `Validators/` yeni namespace açmaz.
 - Bir dosyada tek rol: interface, servis, DTO grubu, validator grubu, options ya da yardımcı. Karışık dosya açılmaz.
 - DTO adları uygulama genelinde benzersizdir; dış sisteme ait olanlar önek alır (`TrendyolBrandDto`).
+- Entity/dış model → DTO kopyalaması Mapster ile yapılır: servis `IMapper` enjekte eder, EF sorgularında `ProjectToType<T>(mapper.Config)` kullanılır. Hesaplama, iş kuralı ya da ağaç kurma içeren dönüşümler elle yazılır.
+- Config `RequireExplicitMapping` ile çalışır; her yeni eşleme ilgili `MappingConfig`'e eklenmeli, yoksa uygulama açılışta hata verir.
 - DI kaydı `DependencyInjection.cs` içinde, özelliğin private metodunda (`AddCatalog()`, `AddOrdering()` ...) yapılır.
 
 ## API (`src/ECommerce.API`)

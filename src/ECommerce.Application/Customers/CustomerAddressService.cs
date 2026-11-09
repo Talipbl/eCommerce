@@ -1,15 +1,17 @@
 using ECommerce.Application.Common;
 using ECommerce.Core.Persistence;
 using ECommerce.Customers;
+using MapsterMapper;
 
 namespace ECommerce.Application.Customers;
 
-public class CustomerAddressService(IRepository<Customer> customers, IUnitOfWork unitOfWork) : ICustomerAddressService
+public class CustomerAddressService(IRepository<Customer> customers, IUnitOfWork unitOfWork, IMapper mapper)
+    : ICustomerAddressService
 {
     public async Task<IReadOnlyList<AddressDto>> ListAsync(int customerId, CancellationToken cancellationToken = default)
     {
         var customer = await customers.FirstOrDefaultAsync(c => c.Id == customerId, cancellationToken);
-        return customer is null ? [] : customer.Addresses.OrderByDescending(a => a.IsDefault).ThenBy(a => a.Id).Select(ToDto).ToList();
+        return customer is null ? [] : customer.Addresses.OrderByDescending(a => a.IsDefault).ThenBy(a => a.Id).Select(mapper.Map<AddressDto>).ToList();
     }
 
     public async Task<Result<AddressDto>> AddAsync(int customerId, SaveAddressRequest r, CancellationToken cancellationToken = default)
@@ -20,14 +22,14 @@ public class CustomerAddressService(IRepository<Customer> customers, IUnitOfWork
 
         var address = customer.AddAddress(r.Title, r.FullName, r.Phone, r.City, r.District, r.AddressLine, r.PostalCode);
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return Result<AddressDto>.Success(ToDto(address));
+        return Result<AddressDto>.Success(mapper.Map<AddressDto>(address));
     }
 
     public Task<Result<AddressDto>> UpdateAsync(int customerId, int addressId, SaveAddressRequest r, CancellationToken cancellationToken = default) =>
         WithAddressAsync(customerId, addressId, (_, a) =>
         {
             a.Update(r.Title, r.FullName, r.Phone, r.City, r.District, r.AddressLine, r.PostalCode);
-            return ToDto(a);
+            return mapper.Map<AddressDto>(a);
         }, cancellationToken);
 
     public async Task<Result<bool>> DeleteAsync(int customerId, int addressId, CancellationToken cancellationToken = default)
@@ -58,7 +60,4 @@ public class CustomerAddressService(IRepository<Customer> customers, IUnitOfWork
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return Result<T>.Success(value);
     }
-
-    internal static AddressDto ToDto(CustomerAddress a) =>
-        new(a.Id, a.Title, a.FullName, a.Phone, a.City, a.District, a.AddressLine, a.PostalCode, a.IsDefault);
 }

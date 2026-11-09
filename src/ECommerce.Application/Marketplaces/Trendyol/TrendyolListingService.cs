@@ -3,6 +3,8 @@ using ECommerce.Catalog;
 using ECommerce.Core.Persistence;
 using ECommerce.Marketplaces;
 using FluentValidation;
+using Mapster;
+using MapsterMapper;
 using Trendyol.Client.Products;
 
 namespace ECommerce.Application.Marketplaces.Trendyol;
@@ -23,7 +25,8 @@ public class TrendyolListingService(
     ITrendyolProductService trendyolProducts,
     ITrendyolCatalogService trendyolCatalog,
     IMediaUrlBuilder media,
-    TimeProvider clock) : ITrendyolListingService
+    TimeProvider clock,
+    IMapper mapper) : ITrendyolListingService
 {
     private const string Marketplace = MarketplaceNames.Trendyol;
     private const int MaxListingsPerRefresh = 20;
@@ -31,7 +34,7 @@ public class TrendyolListingService(
     private DateTime Now => clock.GetUtcNow().UtcDateTime;
 
     public async Task<IReadOnlyList<CategoryMappingDto>> ListCategoryMappingsAsync(CancellationToken cancellationToken = default) =>
-        (await categoryMappings.ListAsync(m => m.Marketplace == Marketplace, cancellationToken)).Select(ToDto).ToList();
+        (await categoryMappings.ListAsync(m => m.Marketplace == Marketplace, cancellationToken)).Select(mapper.Map<CategoryMappingDto>).ToList();
 
     public async Task<Result<CategoryMappingDto>> MapCategoryAsync(int categoryId, MapCategoryRequest request, CancellationToken cancellationToken = default)
     {
@@ -53,7 +56,7 @@ public class TrendyolListingService(
             mapping.Update(request.ExternalCategoryId, name);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return Result<CategoryMappingDto>.Success(ToDto(mapping));
+        return Result<CategoryMappingDto>.Success(mapper.Map<CategoryMappingDto>(mapping));
     }
 
     public async Task<Result<CategoryMappingDto>> SetCategoryAttributesAsync(int categoryId, SetCategoryAttributesRequest request, CancellationToken cancellationToken = default)
@@ -89,12 +92,12 @@ public class TrendyolListingService(
 
         mapping.SetAttributes(request.Attributes);
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return Result<CategoryMappingDto>.Success(ToDto(mapping));
+        return Result<CategoryMappingDto>.Success(mapper.Map<CategoryMappingDto>(mapping));
     }
 
     public async Task<IReadOnlyList<BrandMappingDto>> ListBrandMappingsAsync(CancellationToken cancellationToken = default) =>
         await brandMappings.ListAsync(q => q.Where(m => m.Marketplace == Marketplace)
-            .Select(m => new BrandMappingDto(m.BrandId, m.ExternalBrandId, m.ExternalBrandName)), cancellationToken);
+            .ProjectToType<BrandMappingDto>(mapper.Config), cancellationToken);
 
     public async Task<Result<BrandMappingDto>> MapBrandAsync(int brandId, MapBrandRequest request, CancellationToken cancellationToken = default)
     {
@@ -110,13 +113,13 @@ public class TrendyolListingService(
             mapping.Update(request.ExternalBrandId, request.ExternalBrandName);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return Result<BrandMappingDto>.Success(new BrandMappingDto(brandId, mapping.ExternalBrandId, mapping.ExternalBrandName));
+        return Result<BrandMappingDto>.Success(mapper.Map<BrandMappingDto>(mapping));
     }
 
     public async Task<Result<ListingDto>> GetAsync(int productId, CancellationToken cancellationToken = default)
     {
         var listing = await FindListingAsync(productId, cancellationToken);
-        return listing is null ? Result<ListingDto>.NotFound("Ürün Trendyol'a gönderilmemiş.") : Result<ListingDto>.Success(ToDto(listing));
+        return listing is null ? Result<ListingDto>.NotFound("Ürün Trendyol'a gönderilmemiş.") : Result<ListingDto>.Success(mapper.Map<ListingDto>(listing));
     }
 
     public async Task<Result<ListingDto>> PublishAsync(int productId, PublishListingRequest request, CancellationToken cancellationToken = default)
@@ -196,7 +199,7 @@ public class TrendyolListingService(
             $"{items.Count} varyant gönderildi (batch {response.Value.BatchRequestId}).", Now));
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result<ListingDto>.Success(ToDto(listing));
+        return Result<ListingDto>.Success(mapper.Map<ListingDto>(listing));
     }
 
     public async Task<int> RefreshStatusesAsync(CancellationToken cancellationToken = default)
@@ -281,8 +284,6 @@ public class TrendyolListingService(
             .ToList();
     }
 
-    private static CategoryMappingDto ToDto(MarketplaceCategoryMapping m) => new(m.CategoryId, m.ExternalCategoryId, m.ExternalCategoryName, m.Attributes);
-
     private Task<MarketplaceListing?> FindListingAsync(int productId, CancellationToken cancellationToken) =>
         listings.FirstOrDefaultAsync(l => l.Marketplace == Marketplace && l.ProductId == productId, cancellationToken);
 
@@ -300,8 +301,4 @@ public class TrendyolListingService(
             _ => new AppError(ErrorKind.Unavailable, message)
         };
     }
-
-    private static ListingDto ToDto(MarketplaceListing l) =>
-        new(l.ProductId, l.Status, l.ExternalContentId, l.LastBatchRequestId, l.StatusMessage, l.LastSubmittedAt, l.LastCheckedAt,
-            l.ProductAttributes, l.VariantAttributes, l.DeliveryDuration);
 }

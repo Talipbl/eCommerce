@@ -2,6 +2,7 @@ using ECommerce.Application.Auth;
 using ECommerce.Application.Common;
 using ECommerce.Core.Persistence;
 using ECommerce.Customers;
+using MapsterMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using System.Linq.Expressions;
@@ -15,7 +16,8 @@ public class CustomerAuthService(
     IPasswordHasher<Customer> passwordHasher,
     ITokenService tokenService,
     IOptions<AuthOptions> options,
-    TimeProvider clock)
+    TimeProvider clock,
+    IMapper mapper)
     : AccountAuthService<Customer, CustomerRefreshToken>(customers, refreshTokens, unitOfWork, passwordHasher, tokenService, options, clock), ICustomerAuthService
 {
     public async Task<Result<AuthTokens>> RegisterAsync(RegisterCustomerRequest request, CancellationToken cancellationToken = default)
@@ -39,7 +41,7 @@ public class CustomerAuthService(
     public async Task<CustomerProfileDto?> GetProfileAsync(int customerId, CancellationToken cancellationToken = default)
     {
         var customer = await Accounts.GetByIdAsync(customerId, cancellationToken);
-        return customer is null ? null : ToDto(customer);
+        return customer is null ? null : mapper.Map<CustomerProfileDto>(customer);
     }
 
     public async Task<Result<CustomerProfileDto>> UpdateProfileAsync(int customerId, UpdateCustomerProfileRequest request, CancellationToken cancellationToken = default)
@@ -50,7 +52,7 @@ public class CustomerAuthService(
 
         customer.UpdateProfile(request.FirstName, request.LastName, request.Phone);
         await UnitOfWork.SaveChangesAsync(cancellationToken);
-        return Result<CustomerProfileDto>.Success(ToDto(customer));
+        return Result<CustomerProfileDto>.Success(mapper.Map<CustomerProfileDto>(customer));
     }
 
     protected override Expression<Func<Customer, bool>> LoginEquals(string login)
@@ -62,6 +64,4 @@ public class CustomerAuthService(
     protected override Expression<Func<CustomerRefreshToken, bool>> TokenHashEquals(string tokenHash) => t => t.TokenHash == tokenHash;
 
     protected override Expression<Func<CustomerRefreshToken, bool>> ActiveTokensOf(int accountId) => t => t.CustomerId == accountId && t.RevokedAt == null;
-
-    private static CustomerProfileDto ToDto(Customer c) => new(c.Id, c.Email, c.FirstName, c.LastName, c.Phone);
 }

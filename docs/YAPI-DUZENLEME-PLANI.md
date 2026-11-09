@@ -157,11 +157,18 @@ Faz 1–4 bittikten sonra, ayrı branch'te yapılır. Bugün Application'da Maps
 - Domain nesnesi oluşturma (`new VariantAttribute`, `new PackageLine`) ve sonuç/özet record'ları (`OrderImportSummary`, `BatchAcceptedDto`): bunlar eşleme değil.
 
 **Adımlar**
-- [ ] 5.1 Config kuralları (`RequireExplicitMapping` vb.) açılır; `tests/ECommerce.UnitTests` içine `TestMapper` yardımcısı (`MappingRegistration.CreateConfig()` + `Mapper`) eklenir. Servisi elle kuran testler (`CustomerServiceTests`, `TrendyolBatchServiceTests`, `TrendyolCatalogServiceTests`) bunu kullanır.
-- [ ] 5.2 Catalog + Customers: basit eşlemeler ve `BrandAdminService` projection'ı.
-- [ ] 5.3 Ordering: `OrderMapping` statik sınıfı `OrderingMappingConfig`'e dönüşür; `OrderDto` için bağlam denemesi.
-- [ ] 5.4 Marketplaces: sync admin projection'ları, listing/batch DTO'ları, Trendyol client → DTO eşlemeleri.
-- [ ] 5.5 Her eşleme için kısa birim testi (özellikle `.Map(...)` ile özelleşen alanlar ve iç içe ağaç).
+- [x] 5.1 Config kuralları (`RequireExplicitMapping` vb.) açılır; `tests/ECommerce.UnitTests` içine `TestMapper` yardımcısı (`MappingRegistration.CreateConfig()` + `Mapper`) eklenir. Servisi elle kuran testler (`CustomerServiceTests`, `TrendyolBatchServiceTests`, `TrendyolCatalogServiceTests`) bunu kullanır.
+- [x] 5.2 Catalog + Customers: basit eşlemeler ve `BrandAdminService` projection'ı.
+- [x] 5.3 Ordering: `OrderMapping` statik sınıfı `OrderingMappingConfig`'e dönüşür; `OrderDto` için bağlam denemesi.
+- [x] 5.4 Marketplaces: sync admin projection'ları, listing/batch DTO'ları, Trendyol client → DTO eşlemeleri.
+- [x] 5.5 Her eşleme için kısa birim testi (özellikle `.Map(...)` ile özelleşen alanlar ve iç içe ağaç).
+
+**Uygulama notları (2026-11-09)**
+- `CategoryNodeDto` özyinelemeli ağaç olduğu için Mapster derlemesi sonsuz döngüye giriyor; diğer ağaçlar gibi elle kaldı.
+- `ProductDetailDto` görsel URL'i `MappingParameters.Media` çalışma zamanı parametresiyle verilir: `mapper.From(p).AddParameters(...)`.
+- `OrderDto.BankTransfer` eşlemede `Ignore` edilir, `OrderMapping.ToOrderDto` ayarlardan `with` ile doldurur (record kendi tipine eşlenemiyor).
+- `StoreVariantDto` ve `CartItemDto` içindeki `VariantAttributeDto` listesi hesaplanan DTO'nun parçası olarak elle kaldı.
+- `MappingConfigurationTests` hem `Compile()` hem `CompileProjection()` doğrular; özel alanlar `Common/MappingTests.cs` ile test edilir.
 
 **Kabul:** Tüm testler yeşil; API yanıtları birebir aynı (entegrasyon testleri); EF projection'larında üretilen SQL'de fazladan kolon/`JOIN` yok; "elle kalır" listesi dışında `new XxxDto(` kalmaz.
 

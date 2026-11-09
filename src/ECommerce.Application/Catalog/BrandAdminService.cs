@@ -2,10 +2,13 @@ using ECommerce.Application.Common;
 using ECommerce.Catalog;
 using ECommerce.Core.Persistence;
 using ECommerce.Core.Text;
+using Mapster;
+using MapsterMapper;
 
 namespace ECommerce.Application.Catalog;
 
-public class BrandAdminService(IRepository<Brand> brands, IRepository<Product> products, IUnitOfWork unitOfWork) : IBrandAdminService
+public class BrandAdminService(IRepository<Brand> brands, IRepository<Product> products, IUnitOfWork unitOfWork, IMapper mapper)
+    : IBrandAdminService
 {
     public async Task<IReadOnlyList<BrandDto>> ListAsync(string? search, CancellationToken cancellationToken = default)
     {
@@ -13,7 +16,7 @@ public class BrandAdminService(IRepository<Brand> brands, IRepository<Product> p
         return await brands.ListAsync(q => q
             .Where(b => term == null || b.Name.ToLower().Contains(term))
             .OrderBy(b => b.Name)
-            .Select(b => new BrandDto(b.Id, b.Name, b.Slug, b.IsActive)), cancellationToken);
+            .ProjectToType<BrandDto>(mapper.Config), cancellationToken);
     }
 
     public async Task<Result<BrandDto>> CreateAsync(SaveBrandRequest request, CancellationToken cancellationToken = default)
@@ -26,7 +29,7 @@ public class BrandAdminService(IRepository<Brand> brands, IRepository<Product> p
         brand.SetActive(request.IsActive);
         brands.Add(brand);
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return Result<BrandDto>.Success(ToDto(brand));
+        return Result<BrandDto>.Success(mapper.Map<BrandDto>(brand));
     }
 
     public async Task<Result<BrandDto>> UpdateAsync(int id, SaveBrandRequest request, CancellationToken cancellationToken = default)
@@ -42,7 +45,7 @@ public class BrandAdminService(IRepository<Brand> brands, IRepository<Product> p
         brand.Update(request.Name, slug);
         brand.SetActive(request.IsActive);
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return Result<BrandDto>.Success(ToDto(brand));
+        return Result<BrandDto>.Success(mapper.Map<BrandDto>(brand));
     }
 
     public async Task<Result<bool>> DeleteAsync(int id, CancellationToken cancellationToken = default)
@@ -57,6 +60,4 @@ public class BrandAdminService(IRepository<Brand> brands, IRepository<Product> p
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return Result<bool>.Success(true);
     }
-
-    private static BrandDto ToDto(Brand b) => new(b.Id, b.Name, b.Slug, b.IsActive);
 }
