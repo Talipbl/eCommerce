@@ -120,9 +120,9 @@ Her faz ayrı branch + PR; testler her adımda yeşil kalır. Sıra, en çok kar
   `Program.cs`'teki 4 `AddHostedService` satırı `AddBackgroundJobs()` extension'ına alınır.
 
 ### Faz 3 — Domain düzeni
-- [ ] 3.1 `Domains/` ara klasörü kaldırılır (`ECommerce.Domain/Catalog/...`). Namespace'ler **değişmez**; EF snapshot ve migration'lar etkilenmez.
-- [ ] 3.2 Ayrı aggregate'ler bölünür: `Brand.cs`; `MarketplaceCategoryMapping.cs`, `MarketplaceBrandMapping.cs`, `MarketplaceNames.cs`; `MarketplaceOutboxMessage.cs`, `MarketplaceOrderStatusUpdate.cs`, `MarketplaceSyncState.cs`, `MarketplaceSyncLog.cs`.
-- [ ] 3.3 `Admin/Const/AdminRoles.cs` → `Admin/AdminRoles.cs` (tek dosyalık klasör kaldırılır).
+- [x] 3.1 `Domains/` ara klasörü kaldırılır (`ECommerce.Domain/Catalog/...`). Namespace'ler **değişmez**; EF snapshot ve migration'lar etkilenmez.
+- [x] 3.2 Ayrı aggregate'ler bölünür: `Brand.cs`; `MarketplaceCategoryMapping.cs`, `MarketplaceBrandMapping.cs`, `MarketplaceNames.cs`; `MarketplaceOutboxMessage.cs`, `MarketplaceOrderStatusUpdate.cs`, `MarketplaceSyncState.cs`, `MarketplaceSyncLog.cs`. Ek olarak `CustomerRoles.cs` ve `CustomerRefreshToken.cs` (`AdminRoles`/`AdminRefreshToken` ile tutarlı).
+- [x] 3.3 `Admin/Const/AdminRoles.cs` → `Admin/AdminRoles.cs` (tek dosyalık klasör kaldırılır).
 
 ### Faz 4 — Testler ve kurallar
 - [ ] 4.1 `UnitTests/Marketplaces/` (16 dosya) → `Marketplaces/` + `Marketplaces/Trendyol/`; test klasörleri Application ile aynalanır.
