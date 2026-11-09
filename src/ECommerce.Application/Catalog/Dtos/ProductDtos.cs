@@ -49,3 +49,5 @@ public record ProductDetailDto(
     bool IsActive,
     IReadOnlyList<VariantDto> Variants,
     IReadOnlyList<ProductImageDto> Images);
+
+public record ReorderImagesRequest(IReadOnlyList<int> ImageIds);

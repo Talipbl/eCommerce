@@ -8,56 +8,6 @@ namespace ECommerce.API.Controllers.Catalog;
 
 [ApiController]
 [ApiVersion(1.0)]
-[Route("api/v{version:apiVersion}/catalog/categories")]
-[Tags("Katalog - Kategoriler")]
-public class CategoriesController(ICategoryAdminService categories) : ControllerBase
-{
-    [HttpGet]
-    public async Task<IReadOnlyList<CategoryTreeDto>> GetTree(CancellationToken cancellationToken) =>
-        await categories.GetTreeAsync(cancellationToken);
-
-    [HttpPost]
-    [ProducesResponseType<CategoryDto>(StatusCodes.Status201Created)]
-    public async Task<IActionResult> Create(SaveCategoryRequest request, CancellationToken cancellationToken) =>
-        this.ToActionResult(await categories.CreateAsync(request, cancellationToken), c => StatusCode(StatusCodes.Status201Created, c));
-
-    [HttpPut("{id:int}")]
-    public async Task<IActionResult> Update(int id, SaveCategoryRequest request, CancellationToken cancellationToken) =>
-        this.ToActionResult(await categories.UpdateAsync(id, request, cancellationToken), Ok);
-
-    [HttpDelete("{id:int}")]
-    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken) =>
-        this.ToActionResult(await categories.DeleteAsync(id, cancellationToken), _ => NoContent());
-}
-
-[ApiController]
-[ApiVersion(1.0)]
-[Route("api/v{version:apiVersion}/catalog/brands")]
-[Tags("Katalog - Markalar")]
-public class BrandsController(IBrandAdminService brands) : ControllerBase
-{
-    [HttpGet]
-    public async Task<IReadOnlyList<BrandDto>> List([FromQuery] string? search, CancellationToken cancellationToken) =>
-        await brands.ListAsync(search, cancellationToken);
-
-    [HttpPost]
-    [ProducesResponseType<BrandDto>(StatusCodes.Status201Created)]
-    public async Task<IActionResult> Create(SaveBrandRequest request, CancellationToken cancellationToken) =>
-        this.ToActionResult(await brands.CreateAsync(request, cancellationToken), b => StatusCode(StatusCodes.Status201Created, b));
-
-    [HttpPut("{id:int}")]
-    public async Task<IActionResult> Update(int id, SaveBrandRequest request, CancellationToken cancellationToken) =>
-        this.ToActionResult(await brands.UpdateAsync(id, request, cancellationToken), Ok);
-
-    [HttpDelete("{id:int}")]
-    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken) =>
-        this.ToActionResult(await brands.DeleteAsync(id, cancellationToken), _ => NoContent());
-}
-
-public record ReorderImagesRequest(IReadOnlyList<int> ImageIds);
-
-[ApiController]
-[ApiVersion(1.0)]
 [Route("api/v{version:apiVersion}/catalog/products")]
 [Tags("Katalog - Ürünler")]
 public class ProductsController(IProductAdminService products, IProductImageService images) : ControllerBase

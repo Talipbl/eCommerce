@@ -3,7 +3,7 @@ using ECommerce.API.Infrastructure;
 using ECommerce.Application.Marketplaces.Trendyol;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ECommerce.API.Controllers.Trendyol;
+namespace ECommerce.API.Controllers.Marketplaces.Trendyol;
 
 [ApiController]
 [ApiVersion(1.0)]

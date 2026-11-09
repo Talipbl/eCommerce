@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
-namespace ECommerce.API.Controllers;
+namespace ECommerce.API.Controllers.Auth;
 
 [ApiController]
 [ApiVersion(1.0)]
@@ -97,5 +97,3 @@ public class AuthController(IAuthService authService) : ControllerBase
 
     private ObjectResult Unauthorized401(string title) => Problem(title: title, statusCode: StatusCodes.Status401Unauthorized);
 }
-
-public record AccessTokenResponse(string AccessToken, DateTime ExpiresAt, string TokenType = "Bearer");

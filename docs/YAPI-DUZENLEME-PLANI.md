@@ -104,10 +104,10 @@ Her faz ayrı branch + PR; testler her adımda yeşil kalır. Sıra, en çok kar
 **Kabul:** Her `.cs` dosyası tek bir role sahip (interface / servis / DTO grubu / validator grubu / options / yardımcı). 300+ satırlık karma dosya kalmaz.
 
 ### Faz 2 — API düzeni
-- [ ] 2.1 Dosya başına bir controller: `CategoriesController.cs`, `BrandsController.cs`, `ProductsController.cs`; `ReorderImagesRequest` → Application `Catalog/Dtos/ProductDtos.cs`.
-- [ ] 2.2 `CustomerControllers.cs` bölünür: `Customers/CustomerAccountController.cs`, `Shopping/CartController.cs`, `Ordering/CustomerOrdersController.cs`. Route'lar değişmez.
-- [ ] 2.3 `Controllers/Trendyol/` → `Controllers/Marketplaces/Trendyol/`; `OrderPackagesFilter`, `ProductListFilter` ayrı dosyalara.
-- [ ] 2.4 `Infrastructure/` alt klasörlere ayrılır:
+- [x] 2.1 Dosya başına bir controller: `CategoriesController.cs`, `BrandsController.cs`, `ProductsController.cs`; `ReorderImagesRequest` → Application `Catalog/Dtos/ProductDtos.cs`. `AuthController` → `Controllers/Auth/`, `AccessTokenResponse` kendi dosyasına.
+- [x] 2.2 `CustomerControllers.cs` bölünür: `Customers/CustomerAccountController.cs`, `Shopping/CartController.cs`, `Ordering/CustomerOrdersController.cs`. Route'lar değişmez.
+- [x] 2.3 `Controllers/Trendyol/` → `Controllers/Marketplaces/Trendyol/`; `OrderPackagesFilter`, `ProductListFilter` ayrı dosyalara.
+- [x] 2.4 `Infrastructure/` alt klasörlere ayrılır:
   ```
   Infrastructure/
     Http/        ResultActionResults, MarketplaceActionResults, ValidationFilter,

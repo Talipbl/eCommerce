@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using ECommerce.API.BackgroundJobs;
 using ECommerce.API.Infrastructure;
 using ECommerce.Application;
 using ECommerce.Persistence;
@@ -19,10 +20,7 @@ builder.Services.AddPersistence(builder.Configuration);
 builder.Services.AddApiSecurity(builder.Configuration);
 builder.Services.AddMedia(builder.Configuration);
 
-builder.Services.AddHostedService<TrendyolBatchStatusWorker>();
-builder.Services.AddHostedService<TrendyolInventorySyncWorker>();
-builder.Services.AddHostedService<TrendyolOrderImportWorker>();
-builder.Services.AddHostedService<TrendyolOrderStatusWorker>();
+builder.Services.AddBackgroundJobs();
 
 builder.Services
     .AddControllers(options => options.Filters.Add<ValidationFilter>())

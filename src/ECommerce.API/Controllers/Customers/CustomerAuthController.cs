@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using ECommerce.API.Controllers.Auth;
 using ECommerce.API.Infrastructure;
 using ECommerce.Application.Auth;
 using ECommerce.Application.Customers;
