@@ -5,15 +5,6 @@ using ECommerce.Ordering;
 
 namespace ECommerce.Application.Marketplaces;
 
-public record OrderImportSummary(string Marketplace, int Imported, int Updated, int Skipped, string? Error = null);
-
-public interface IMarketplaceOrderImportService
-{
-    Task<IReadOnlyList<OrderImportSummary>> ImportAllAsync(CancellationToken cancellationToken = default);
-
-    Task<OrderImportSummary> ImportAsync(string marketplace, CancellationToken cancellationToken = default);
-}
-
 /// <summary>
 /// Pazaryeri siparişlerini son çekim zamanından (imleç) itibaren, pazaryerinin izin verdiği pencerelerle ve son güncellenme
 /// tarihine göre içe alır. Dış referans tekil olduğundan aynı paket iki kez sipariş olmaz; sonraki çekimlerde durum yansıtılır.

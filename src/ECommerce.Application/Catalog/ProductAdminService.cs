@@ -2,22 +2,9 @@ using ECommerce.Application.Common;
 using ECommerce.Catalog;
 using ECommerce.Core.Persistence;
 using ECommerce.Core.Text;
+using MapsterMapper;
 
 namespace ECommerce.Application.Catalog;
-
-public interface IProductAdminService
-{
-    Task<PagedResult<ProductListItemDto>> ListAsync(ProductAdminQuery query, CancellationToken cancellationToken = default);
-    Task<Result<ProductDetailDto>> GetAsync(int id, CancellationToken cancellationToken = default);
-    Task<Result<ProductDetailDto>> CreateAsync(CreateProductRequest request, CancellationToken cancellationToken = default);
-    Task<Result<ProductDetailDto>> UpdateAsync(int id, UpdateProductRequest request, CancellationToken cancellationToken = default);
-    Task<Result<ProductDetailDto>> AddVariantAsync(int id, VariantInput request, CancellationToken cancellationToken = default);
-    Task<Result<ProductDetailDto>> UpdateVariantAsync(int id, int variantId, UpdateVariantRequest request, CancellationToken cancellationToken = default);
-    Task<Result<ProductDetailDto>> RemoveVariantAsync(int id, int variantId, CancellationToken cancellationToken = default);
-    Task<Result<ProductDetailDto>> PublishAsync(int id, CancellationToken cancellationToken = default);
-    Task<Result<ProductDetailDto>> UnpublishAsync(int id, CancellationToken cancellationToken = default);
-    Task<Result<bool>> DeleteAsync(int id, CancellationToken cancellationToken = default);
-}
 
 public class ProductAdminService(
     IRepository<Product> products,
@@ -25,7 +12,8 @@ public class ProductAdminService(
     IRepository<Brand> brands,
     IRepository<Category> categories,
     IUnitOfWork unitOfWork,
-    IMediaUrlBuilder media) : IProductAdminService
+    IMediaUrlBuilder media,
+    IMapper mapper) : IProductAdminService
 {
     public async Task<PagedResult<ProductListItemDto>> ListAsync(ProductAdminQuery query, CancellationToken cancellationToken = default)
     {
@@ -187,9 +175,6 @@ public class ProductAdminService(
 
     private static Result<ProductDetailDto> NotFound() => Result<ProductDetailDto>.NotFound("Ürün bulunamadı.");
 
-    internal ProductDetailDto ToDetail(Product p) => new(
-        p.Id, p.Name, p.Slug, p.ProductCode, p.BrandId, p.CategoryId, p.VatRate, p.Description, p.IsActive,
-        p.Variants.Select(v => new VariantDto(v.Id, v.Sku, v.Barcode, v.Price, v.ListPrice, v.StockQuantity, v.IsActive,
-            v.Attributes.Select(a => new VariantAttributeDto(a.Name, a.Value)).ToList())).ToList(),
-        p.Images.OrderBy(i => i.SortOrder).Select(i => new ProductImageDto(i.Id, media.ToPublicUrl(i.Path), i.AltText, i.SortOrder)).ToList());
+    internal ProductDetailDto ToDetail(Product p) =>
+        mapper.From(p).AddParameters(MappingParameters.Media, media).AdaptToType<ProductDetailDto>();
 }

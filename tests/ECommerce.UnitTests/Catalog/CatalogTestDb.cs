@@ -1,8 +1,10 @@
 using ECommerce.Application.Catalog;
+using ECommerce.Application.Common;
 using ECommerce.Catalog;
 using ECommerce.Persistence;
 using ECommerce.UnitTests.Persistence;
 using Microsoft.Extensions.Time.Testing;
+using ECommerce.UnitTests.Common;
 
 namespace ECommerce.UnitTests.Catalog;
 
@@ -17,11 +19,11 @@ public sealed class CatalogTestDb : IAsyncDisposable
 
     public IMediaUrlBuilder Media { get; } = new FakeMediaUrlBuilder();
 
-    public CategoryAdminService CategoryService() => new(Categories, Products, Context);
+    public CategoryAdminService CategoryService() => new(Categories, Products, Context, TestMapper.Instance);
 
-    public BrandAdminService BrandService() => new(Brands, Products, Context);
+    public BrandAdminService BrandService() => new(Brands, Products, Context, TestMapper.Instance);
 
-    public ProductAdminService ProductService() => new(Products, Variants, Brands, Categories, Context, Media);
+    public ProductAdminService ProductService() => new(Products, Variants, Brands, Categories, Context, Media, TestMapper.Instance);
 
     public StorefrontService Storefront() => new(Products, Categories, Brands, Media);
 

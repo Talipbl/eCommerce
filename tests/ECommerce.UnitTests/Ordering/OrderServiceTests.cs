@@ -10,8 +10,8 @@ using ECommerce.Persistence;
 using ECommerce.Shopping;
 using ECommerce.UnitTests.Catalog;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
+using ECommerce.UnitTests.Common;
 
 namespace ECommerce.UnitTests.Ordering;
 
@@ -36,8 +36,9 @@ public sealed class OrderServiceTests : IAsyncLifetime
     private EfRepository<Order> Orders => new(_db.Context);
     private CartService Carts => new(new EfRepository<Cart>(_db.Context), _db.Products, _db.Variants, _db.Context, _db.Media);
     private CheckoutService Checkout => new(new EfRepository<Cart>(_db.Context), new EfRepository<Customer>(_db.Context), _db.Products, _db.Variants,
-        Orders, _db.Context, Microsoft.Extensions.Options.Options.Create(Options), _clock);
-    private OrderManagementService Management => new(Orders, _db.Products, _db.Variants, new EfRepository<MarketplaceOrderStatusUpdate>(_db.Context), _db.Context, Microsoft.Extensions.Options.Options.Create(Options), _clock);
+        Orders, _db.Context, Microsoft.Extensions.Options.Options.Create(Options), _clock, TestMapper.Instance);
+    private OrderManagementService Management => new(Orders, _db.Products, _db.Variants, new EfRepository<MarketplaceOrderStatusUpdate>(_db.Context), _db.Context, Microsoft.Extensions.Options.Options.Create(Options), _clock,
+        TestMapper.Instance);
 
     public async ValueTask InitializeAsync()
     {

@@ -2,18 +2,12 @@ using ECommerce.Application.Common;
 using ECommerce.Catalog;
 using ECommerce.Core.Persistence;
 using ECommerce.Core.Text;
+using MapsterMapper;
 
 namespace ECommerce.Application.Catalog;
 
-public interface ICategoryAdminService
-{
-    Task<IReadOnlyList<CategoryTreeDto>> GetTreeAsync(CancellationToken cancellationToken = default);
-    Task<Result<CategoryDto>> CreateAsync(SaveCategoryRequest request, CancellationToken cancellationToken = default);
-    Task<Result<CategoryDto>> UpdateAsync(int id, SaveCategoryRequest request, CancellationToken cancellationToken = default);
-    Task<Result<bool>> DeleteAsync(int id, CancellationToken cancellationToken = default);
-}
-
-public class CategoryAdminService(IRepository<Category> categories, IRepository<Product> products, IUnitOfWork unitOfWork) : ICategoryAdminService
+public class CategoryAdminService(IRepository<Category> categories, IRepository<Product> products, IUnitOfWork unitOfWork, IMapper mapper)
+    : ICategoryAdminService
 {
     public async Task<IReadOnlyList<CategoryTreeDto>> GetTreeAsync(CancellationToken cancellationToken = default)
     {
@@ -33,7 +27,7 @@ public class CategoryAdminService(IRepository<Category> categories, IRepository<
         categories.Add(category);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result<CategoryDto>.Success(ToDto(category));
+        return Result<CategoryDto>.Success(mapper.Map<CategoryDto>(category));
     }
 
     public async Task<Result<CategoryDto>> UpdateAsync(int id, SaveCategoryRequest request, CancellationToken cancellationToken = default)
@@ -52,7 +46,7 @@ public class CategoryAdminService(IRepository<Category> categories, IRepository<
         category.SetActive(request.IsActive);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result<CategoryDto>.Success(ToDto(category));
+        return Result<CategoryDto>.Success(mapper.Map<CategoryDto>(category));
     }
 
     public async Task<Result<bool>> DeleteAsync(int id, CancellationToken cancellationToken = default)
@@ -98,6 +92,4 @@ public class CategoryAdminService(IRepository<Category> categories, IRepository<
             .OrderBy(c => c.SortOrder).ThenBy(c => c.Name)
             .Select(c => new CategoryTreeDto(c.Id, c.Name, c.Slug, c.ParentId, c.SortOrder, c.IsActive, BuildTree(all, c.Id)))
             .ToList();
-
-    private static CategoryDto ToDto(Category c) => new(c.Id, c.Name, c.Slug, c.ParentId, c.Description, c.SortOrder, c.IsActive);
 }

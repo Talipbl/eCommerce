@@ -1,41 +1,10 @@
 using ECommerce.Application.Common;
 using ECommerce.Core.Persistence;
 using ECommerce.Marketplaces;
+using Mapster;
+using MapsterMapper;
 
 namespace ECommerce.Application.Marketplaces;
-
-public enum OutboxKind
-{
-    Inventory,
-    OrderStatus
-}
-
-public record SyncLogQuery(string? Marketplace, SyncOperation? Operation, bool? Succeeded, int Page = 0, int Size = 50);
-
-public record SyncLogDto(long Id, string Marketplace, SyncOperation Operation, string? Reference, bool Succeeded, string? Message, DateTime OccurredAt);
-
-public record SyncStateDto(string Marketplace, string Job, DateTime? Cursor, DateTime? PausedUntil, DateTime? LastRunAt, string? LastError);
-
-public record OutboxEntryDto(
-    int Id,
-    OutboxKind Kind,
-    string Reference,
-    string? Action,
-    OutboxStatus Status,
-    int Attempts,
-    DateTime? NextAttemptAt,
-    DateTime? ProcessedAt,
-    string? Error,
-    DateTime CreatedDate);
-
-public interface IMarketplaceSyncAdminService
-{
-    Task<PagedResult<SyncLogDto>> ListLogsAsync(SyncLogQuery query, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<SyncStateDto>> ListStatesAsync(CancellationToken cancellationToken = default);
-    Task<PagedResult<OutboxEntryDto>> ListOutboxAsync(OutboxKind kind, OutboxStatus? status, int page, int size, CancellationToken cancellationToken = default);
-    Task<Result<OutboxEntryDto>> RetryAsync(OutboxKind kind, int id, CancellationToken cancellationToken = default);
-    Task<int> RetryAllFailedAsync(OutboxKind kind, CancellationToken cancellationToken = default);
-}
 
 /// <summary>Senkron logu, iş durumları ve hatalı outbox kayıtlarının yeniden kuyruğa alınması (yönetici ekranı).</summary>
 public class MarketplaceSyncAdminService(
@@ -43,7 +12,8 @@ public class MarketplaceSyncAdminService(
     IRepository<MarketplaceSyncState> states,
     IRepository<MarketplaceInventoryChange> inventory,
     IRepository<MarketplaceOrderStatusUpdate> statusUpdates,
-    IUnitOfWork unitOfWork) : IMarketplaceSyncAdminService
+    IUnitOfWork unitOfWork,
+    IMapper mapper) : IMarketplaceSyncAdminService
 {
     public async Task<PagedResult<SyncLogDto>> ListLogsAsync(SyncLogQuery query, CancellationToken cancellationToken = default)
     {
@@ -55,13 +25,13 @@ public class MarketplaceSyncAdminService(
 
         var total = await logs.CountAsync(Filter, cancellationToken);
         var items = await logs.ListAsync(q => Filter(q).OrderByDescending(l => l.Id).Skip(page * size).Take(size)
-            .Select(l => new SyncLogDto(l.Id, l.Marketplace, l.Operation, l.Reference, l.Succeeded, l.Message, l.OccurredAt)), cancellationToken);
+            .ProjectToType<SyncLogDto>(mapper.Config), cancellationToken);
         return new PagedResult<SyncLogDto>(page, size, total, items);
     }
 
     public async Task<IReadOnlyList<SyncStateDto>> ListStatesAsync(CancellationToken cancellationToken = default) =>
         await states.ListAsync(q => q.OrderBy(s => s.Marketplace).ThenBy(s => s.Job)
-            .Select(s => new SyncStateDto(s.Marketplace, s.Job, s.Cursor, s.PausedUntil, s.LastRunAt, s.LastError)), cancellationToken);
+            .ProjectToType<SyncStateDto>(mapper.Config), cancellationToken);
 
     public async Task<PagedResult<OutboxEntryDto>> ListOutboxAsync(OutboxKind kind, OutboxStatus? status, int page, int size, CancellationToken cancellationToken = default)
     {

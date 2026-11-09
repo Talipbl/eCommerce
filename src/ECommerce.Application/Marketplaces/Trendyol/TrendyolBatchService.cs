@@ -1,27 +1,10 @@
 using ECommerce.Application.Common;
 using ECommerce.Core.Persistence;
 using ECommerce.Marketplaces;
+using MapsterMapper;
 using Trendyol.Client.Products;
 
 namespace ECommerce.Application.Marketplaces.Trendyol;
-
-public record BatchDto(
-    string BatchRequestId,
-    MarketplaceBatchOperation Operation,
-    MarketplaceBatchStatus Status,
-    int ItemCount,
-    int FailedItemCount,
-    DateTime CreatedAt,
-    DateTime? LastCheckedAt,
-    DateTime? CompletedAt,
-    IReadOnlyList<MarketplaceBatchFailure> Failures);
-
-public interface ITrendyolBatchService
-{
-    Task<PagedResult<BatchDto>> ListAsync(MarketplaceBatchStatus? status, int page, int size, CancellationToken cancellationToken = default);
-    Task<BatchDto?> GetAsync(string batchRequestId, CancellationToken cancellationToken = default);
-    Task<int> RefreshPendingAsync(CancellationToken cancellationToken = default);
-}
 
 /// <summary>
 /// Bekleyen batch'lerin sonucunu Trendyol'dan sorgular. Trendyol sonuçları ~4 saat sakladığı için daha eski kayıtlar süresi dolmuş sayılır.
@@ -30,7 +13,8 @@ public class TrendyolBatchService(
     ITrendyolProductClient client,
     IRepository<MarketplaceBatchRequest> batches,
     IUnitOfWork unitOfWork,
-    TimeProvider clock) : ITrendyolBatchService
+    TimeProvider clock,
+    IMapper mapper) : ITrendyolBatchService
 {
     public static readonly TimeSpan ResultRetention = TimeSpan.FromHours(4);
 
@@ -47,13 +31,13 @@ public class TrendyolBatchService(
             .Skip(page * size)
             .Take(size), cancellationToken);
 
-        return new PagedResult<BatchDto>(page, size, total, items.Select(ToDto).ToList());
+        return new PagedResult<BatchDto>(page, size, total, items.Select(mapper.Map<BatchDto>).ToList());
     }
 
     public async Task<BatchDto?> GetAsync(string batchRequestId, CancellationToken cancellationToken = default)
     {
         var batch = await batches.FirstOrDefaultAsync(b => b.Marketplace == TrendyolBatchTracker.Marketplace && b.BatchRequestId == batchRequestId, cancellationToken);
-        return batch is null ? null : ToDto(batch);
+        return batch is null ? null : mapper.Map<BatchDto>(batch);
     }
 
     public async Task<int> RefreshPendingAsync(CancellationToken cancellationToken = default)
@@ -106,8 +90,4 @@ public class TrendyolBatchService(
         (result.Items ?? [])
             .Where(i => i.Status == "FAILED")
             .Select(i => new MarketplaceBatchFailure(i.RequestItem?.Barcode, i.FailureReasons ?? []));
-
-    private static BatchDto ToDto(MarketplaceBatchRequest batch) =>
-        new(batch.BatchRequestId, batch.Operation, batch.Status, batch.ItemCount, batch.FailedItemCount,
-            batch.CreatedDate, batch.LastCheckedAt, batch.CompletedAt, batch.Failures);
 }

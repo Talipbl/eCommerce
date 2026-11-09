@@ -4,6 +4,7 @@ using ECommerce.Marketplaces;
 using ECommerce.Persistence;
 using ECommerce.UnitTests.Catalog;
 using Microsoft.EntityFrameworkCore;
+using ECommerce.UnitTests.Common;
 
 namespace ECommerce.UnitTests.Marketplaces;
 
@@ -14,7 +15,7 @@ public sealed class MarketplaceSyncAdminServiceTests : IAsyncDisposable
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     private MarketplaceSyncAdminService Service => new(new EfRepository<MarketplaceSyncLog>(_db.Context), new EfRepository<MarketplaceSyncState>(_db.Context),
-        new EfRepository<MarketplaceInventoryChange>(_db.Context), new EfRepository<MarketplaceOrderStatusUpdate>(_db.Context), _db.Context);
+        new EfRepository<MarketplaceInventoryChange>(_db.Context), new EfRepository<MarketplaceOrderStatusUpdate>(_db.Context), _db.Context, TestMapper.Instance);
 
     [Fact]
     public async Task Logs_are_filtered_and_newest_first()

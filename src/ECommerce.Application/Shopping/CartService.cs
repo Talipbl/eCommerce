@@ -7,40 +7,6 @@ using FluentValidation;
 
 namespace ECommerce.Application.Shopping;
 
-public record AddCartItemRequest(int VariantId, int Quantity);
-
-public record UpdateCartItemRequest(int Quantity);
-
-public record CartItemDto(
-    int VariantId,
-    int ProductId,
-    string ProductName,
-    string ProductSlug,
-    IReadOnlyList<VariantAttributeDto> Attributes,
-    decimal UnitPrice,
-    decimal? ListPrice,
-    int Quantity,
-    decimal LineTotal,
-    int AvailableStock,
-    bool IsAvailable,
-    string? ImageUrl);
-
-public record CartDto(IReadOnlyList<CartItemDto> Items, decimal Subtotal, int ItemCount, bool HasUnavailableItems);
-
-public interface ICartService
-{
-    Task<CartDto> GetAsync(int customerId, CancellationToken cancellationToken = default);
-    Task<Result<CartDto>> AddItemAsync(int customerId, AddCartItemRequest request, CancellationToken cancellationToken = default);
-    Task<Result<CartDto>> UpdateItemAsync(int customerId, int variantId, int quantity, CancellationToken cancellationToken = default);
-    Task<CartDto> RemoveItemAsync(int customerId, int variantId, CancellationToken cancellationToken = default);
-}
-
-/// <summary>Bir varyantın o anki satılabilirlik bilgisi; sepet ve sipariş aynı kuralları kullanır.</summary>
-public sealed record PurchasableVariant(Product Product, ProductVariant Variant)
-{
-    public bool IsPurchasable => Product.IsActive && Variant.IsActive;
-}
-
 public class CartService(
     IRepository<Cart> carts,
     IRepository<Product> products,
@@ -144,18 +110,4 @@ public class CartService(
 
         return new CartDto(items, items.Where(i => i.IsAvailable).Sum(i => i.LineTotal), items.Sum(i => i.Quantity), items.Any(i => !i.IsAvailable));
     }
-}
-
-public class AddCartItemRequestValidator : AbstractValidator<AddCartItemRequest>
-{
-    public AddCartItemRequestValidator()
-    {
-        RuleFor(x => x.VariantId).GreaterThan(0);
-        RuleFor(x => x.Quantity).InclusiveBetween(1, Cart.MaxQuantityPerLine);
-    }
-}
-
-public class UpdateCartItemRequestValidator : AbstractValidator<UpdateCartItemRequest>
-{
-    public UpdateCartItemRequestValidator() => RuleFor(x => x.Quantity).InclusiveBetween(0, Cart.MaxQuantityPerLine);
 }

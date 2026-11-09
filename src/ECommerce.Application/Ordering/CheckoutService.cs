@@ -5,16 +5,10 @@ using ECommerce.Core.Persistence;
 using ECommerce.Customers;
 using ECommerce.Ordering;
 using ECommerce.Shopping;
-using FluentValidation;
+using MapsterMapper;
 using Microsoft.Extensions.Options;
 
 namespace ECommerce.Application.Ordering;
-
-public interface ICheckoutService
-{
-    Task<Result<CheckoutPreviewDto>> PreviewAsync(int customerId, PaymentMethod paymentMethod, CancellationToken cancellationToken = default);
-    Task<Result<OrderDto>> PlaceOrderAsync(int customerId, CheckoutRequest request, CancellationToken cancellationToken = default);
-}
 
 /// <summary>
 /// Sepetten sipariş oluşturur: stok düşme, sipariş kaydı ve sepetin temizlenmesi tek kayıtta yapılır.
@@ -27,7 +21,8 @@ public class CheckoutService(
     IRepository<Order> orders,
     IUnitOfWork unitOfWork,
     IOptions<CheckoutOptions> options,
-    TimeProvider clock) : ICheckoutService
+    TimeProvider clock,
+    IMapper mapper) : ICheckoutService
 {
     private readonly CheckoutOptions _options = options.Value;
 
@@ -82,7 +77,7 @@ public class CheckoutService(
             return Result<OrderDto>.Conflict("Sepetinizdeki ürünlerin stoğu bu sırada değişti; lütfen sepeti kontrol edip tekrar deneyin.");
         }
 
-        return Result<OrderDto>.Success(order.ToDto(_options));
+        return Result<OrderDto>.Success(mapper.ToOrderDto(order, _options));
     }
 
     private CheckoutPreviewDto Totals(decimal subtotal, PaymentMethod method)
@@ -124,15 +119,5 @@ public class CheckoutService(
         return problems.Count > 0
             ? (cart, lines, Errors.Invalid("Şu ürünler sipariş edilemiyor: " + string.Join("; ", problems)))
             : (cart, lines, null);
-    }
-}
-
-public class CheckoutRequestValidator : AbstractValidator<CheckoutRequest>
-{
-    public CheckoutRequestValidator()
-    {
-        RuleFor(x => x.AddressId).GreaterThan(0);
-        RuleFor(x => x.PaymentMethod).IsInEnum().NotEqual(PaymentMethod.Marketplace);
-        RuleFor(x => x.Note).MaximumLength(500);
     }
 }
