@@ -8,7 +8,7 @@ using NSubstitute;
 using Trendyol.Client;
 using Trendyol.Client.Products;
 
-namespace ECommerce.UnitTests.Marketplaces;
+namespace ECommerce.UnitTests.Marketplaces.Trendyol;
 
 public sealed class TrendyolBatchServiceTests : IAsyncDisposable
 {

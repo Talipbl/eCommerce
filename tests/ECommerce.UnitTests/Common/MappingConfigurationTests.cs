@@ -1,6 +1,6 @@
 using ECommerce.Application;
 
-namespace ECommerce.UnitTests;
+namespace ECommerce.UnitTests.Common;
 
 public class MappingConfigurationTests
 {

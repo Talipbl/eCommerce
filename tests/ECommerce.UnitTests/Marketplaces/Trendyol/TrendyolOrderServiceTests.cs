@@ -5,7 +5,7 @@ using NSubstitute;
 using Trendyol.Client;
 using Trendyol.Client.Orders;
 
-namespace ECommerce.UnitTests.Marketplaces;
+namespace ECommerce.UnitTests.Marketplaces.Trendyol;
 
 public class TrendyolOrderServiceTests
 {

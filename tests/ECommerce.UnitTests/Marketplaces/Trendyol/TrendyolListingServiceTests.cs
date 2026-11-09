@@ -11,7 +11,7 @@ using Microsoft.Extensions.Time.Testing;
 using NSubstitute;
 using Trendyol.Client.Products;
 
-namespace ECommerce.UnitTests.Marketplaces;
+namespace ECommerce.UnitTests.Marketplaces.Trendyol;
 
 public sealed class TrendyolListingServiceTests : IAsyncLifetime
 {

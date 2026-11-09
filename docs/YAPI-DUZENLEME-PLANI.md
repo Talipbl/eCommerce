@@ -125,9 +125,9 @@ Her faz ayrı branch + PR; testler her adımda yeşil kalır. Sıra, en çok kar
 - [x] 3.3 `Admin/Const/AdminRoles.cs` → `Admin/AdminRoles.cs` (tek dosyalık klasör kaldırılır).
 
 ### Faz 4 — Testler ve kurallar
-- [ ] 4.1 `UnitTests/Marketplaces/` (16 dosya) → `Marketplaces/` + `Marketplaces/Trendyol/`; test klasörleri Application ile aynalanır.
-- [ ] 4.2 `.editorconfig`'e namespace/klasör kuralı notu (`dotnet_style_namespace_match_folder = false` yalnızca `Dtos/` ve `Validators/` için ya da genel); IDE uyarısı çıkmaması sağlanır.
-- [ ] 4.3 Hedef kurallar bölümü kısa bir `docs/CONVENTIONS.md` (veya CLAUDE.md) dosyasına taşınır, yeni kod bu düzene uyar.
+- [x] 4.1 `UnitTests/Marketplaces/` (16 dosya) → `Marketplaces/` + `Marketplaces/Trendyol/`; test klasörleri Application ile aynalanır.
+- [x] 4.2 `.editorconfig`'e `dotnet_style_namespace_match_folder = false` eklenir (genel); IDE uyarısı çıkmaz.
+- [x] 4.3 Hedef kurallar kısa bir `docs/CONVENTIONS.md` dosyasına yazılır, yeni kod bu düzene uyar.
 
 ### Faz 5 — Elle eşlemelerin Mapster'a geçişi (sonraki aşama)
 
