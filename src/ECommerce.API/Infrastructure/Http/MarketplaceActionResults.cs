@@ -5,12 +5,15 @@ namespace ECommerce.API.Infrastructure;
 
 public static class MarketplaceActionResults
 {
-    public static IActionResult ToActionResult<T>(this ControllerBase controller, MarketplaceResult<T> result, Func<T, IActionResult> onSuccess)
-    {
-        if (result.Succeeded)
-            return onSuccess(result.Value!);
+    /// <summary>Başarıda 200 ile değeri döner; dönüş tipi OpenAPI dokümanına cevap şeması olarak yazılır.</summary>
+    public static ActionResult<T> ToOk<T>(this ControllerBase controller, MarketplaceResult<T> result) =>
+        result.Succeeded ? controller.Ok(result.Value) : controller.ToProblem(result.Error!);
 
-        var error = result.Error!;
+    public static IActionResult ToActionResult<T>(this ControllerBase controller, MarketplaceResult<T> result, Func<T, IActionResult> onSuccess) =>
+        result.Succeeded ? onSuccess(result.Value!) : controller.ToProblem(result.Error!);
+
+    private static ObjectResult ToProblem(this ControllerBase controller, MarketplaceError error)
+    {
         var (status, title) = error.Kind switch
         {
             MarketplaceErrorKind.Validation => (StatusCodes.Status400BadRequest, "İstek pazaryeri tarafından reddedildi."),

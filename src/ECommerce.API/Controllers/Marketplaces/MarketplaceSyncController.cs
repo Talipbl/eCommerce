@@ -31,10 +31,10 @@ public class MarketplaceSyncController(IMarketplaceSyncAdminService sync) : Cont
         await sync.ListOutboxAsync(kind, status, page, size, cancellationToken);
 
     [HttpPost("outbox/{kind}/{id:int}/retry")]
-    public async Task<IActionResult> Retry(OutboxKind kind, int id, CancellationToken cancellationToken) =>
-        this.ToActionResult(await sync.RetryAsync(kind, id, cancellationToken), Ok);
+    public async Task<ActionResult<OutboxEntryDto>> Retry(OutboxKind kind, int id, CancellationToken cancellationToken) =>
+        this.ToOk(await sync.RetryAsync(kind, id, cancellationToken));
 
     [HttpPost("outbox/{kind}/retry-failed")]
-    public async Task<IActionResult> RetryFailed(OutboxKind kind, CancellationToken cancellationToken) =>
-        Ok(new { requeued = await sync.RetryAllFailedAsync(kind, cancellationToken) });
+    public async Task<RequeuedCountResponse> RetryFailed(OutboxKind kind, CancellationToken cancellationToken) =>
+        new(await sync.RetryAllFailedAsync(kind, cancellationToken));
 }

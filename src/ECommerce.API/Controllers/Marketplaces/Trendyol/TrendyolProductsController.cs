@@ -14,8 +14,8 @@ public class TrendyolProductsController(ITrendyolProductService products) : Cont
 {
     [HttpGet("approved")]
     [ProducesResponseType<ApprovedProductPage>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetApproved([FromQuery] ProductListFilter filter, [FromQuery] long? contentId, CancellationToken cancellationToken) =>
-        this.ToActionResult(await products.GetApprovedAsync(new ApprovedProductQuery
+    public async Task<ActionResult<ApprovedProductPage>> GetApproved([FromQuery] ProductListFilter filter, [FromQuery] long? contentId, CancellationToken cancellationToken) =>
+        this.ToOk(await products.GetApprovedAsync(new ApprovedProductQuery
         {
             Barcode = filter.Barcode,
             ContentId = contentId,
@@ -29,12 +29,12 @@ public class TrendyolProductsController(ITrendyolProductService products) : Cont
             Page = filter.Page,
             Size = filter.Size,
             NextPageToken = filter.NextPageToken
-        }, cancellationToken), Ok);
+        }, cancellationToken));
 
     [HttpGet("unapproved")]
     [ProducesResponseType<UnapprovedProductPage>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetUnapproved([FromQuery] ProductListFilter filter, CancellationToken cancellationToken) =>
-        this.ToActionResult(await products.GetUnapprovedAsync(new UnapprovedProductQuery
+    public async Task<ActionResult<UnapprovedProductPage>> GetUnapproved([FromQuery] ProductListFilter filter, CancellationToken cancellationToken) =>
+        this.ToOk(await products.GetUnapprovedAsync(new UnapprovedProductQuery
         {
             Barcode = filter.Barcode,
             StockCode = filter.StockCode,
@@ -47,7 +47,7 @@ public class TrendyolProductsController(ITrendyolProductService products) : Cont
             Page = filter.Page,
             Size = filter.Size,
             NextPageToken = filter.NextPageToken
-        }, cancellationToken), Ok);
+        }, cancellationToken));
 
     [HttpPost]
     [ProducesResponseType<BatchAcceptedDto>(StatusCodes.Status202Accepted)]

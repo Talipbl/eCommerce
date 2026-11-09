@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using ECommerce.API.Controllers.Marketplaces;
 using ECommerce.API.Infrastructure;
 using ECommerce.Application.Common;
 using ECommerce.Application.Marketplaces;
@@ -24,21 +25,21 @@ public class TrendyolIntegrationController(
         await listings.ListCategoryMappingsAsync(cancellationToken);
 
     [HttpPut("mappings/categories/{categoryId:int}")]
-    public async Task<IActionResult> MapCategory(int categoryId, MapCategoryRequest request, CancellationToken cancellationToken) =>
-        this.ToActionResult(await listings.MapCategoryAsync(categoryId, request, cancellationToken), Ok);
+    public async Task<ActionResult<CategoryMappingDto>> MapCategory(int categoryId, MapCategoryRequest request, CancellationToken cancellationToken) =>
+        this.ToOk(await listings.MapCategoryAsync(categoryId, request, cancellationToken));
 
     /// <summary>Kategori özellik eşlemesi: sabit değerler ve varyant özelliği → Trendyol değer eşlemeleri (tümünü değiştirir).</summary>
     [HttpPut("mappings/categories/{categoryId:int}/attributes")]
-    public async Task<IActionResult> MapCategoryAttributes(int categoryId, SetCategoryAttributesRequest request, CancellationToken cancellationToken) =>
-        this.ToActionResult(await listings.SetCategoryAttributesAsync(categoryId, request, cancellationToken), Ok);
+    public async Task<ActionResult<CategoryMappingDto>> MapCategoryAttributes(int categoryId, SetCategoryAttributesRequest request, CancellationToken cancellationToken) =>
+        this.ToOk(await listings.SetCategoryAttributesAsync(categoryId, request, cancellationToken));
 
     [HttpGet("mappings/brands")]
     public async Task<IReadOnlyList<BrandMappingDto>> ListBrandMappings(CancellationToken cancellationToken) =>
         await listings.ListBrandMappingsAsync(cancellationToken);
 
     [HttpPut("mappings/brands/{brandId:int}")]
-    public async Task<IActionResult> MapBrand(int brandId, MapBrandRequest request, CancellationToken cancellationToken) =>
-        this.ToActionResult(await listings.MapBrandAsync(brandId, request, cancellationToken), Ok);
+    public async Task<ActionResult<BrandMappingDto>> MapBrand(int brandId, MapBrandRequest request, CancellationToken cancellationToken) =>
+        this.ToOk(await listings.MapBrandAsync(brandId, request, cancellationToken));
 
     [HttpGet("listings")]
     public async Task<PagedResult<ListingSummaryDto>> ListListings(
@@ -46,8 +47,8 @@ public class TrendyolIntegrationController(
         await listings.ListAsync(new ListingQuery(status, page, size), cancellationToken);
 
     [HttpGet("listings/{productId:int}")]
-    public async Task<IActionResult> GetListing(int productId, CancellationToken cancellationToken) =>
-        this.ToActionResult(await listings.GetAsync(productId, cancellationToken), Ok);
+    public async Task<ActionResult<ListingDto>> GetListing(int productId, CancellationToken cancellationToken) =>
+        this.ToOk(await listings.GetAsync(productId, cancellationToken));
 
     [HttpPost("listings/{productId:int}")]
     [ProducesResponseType<ListingDto>(StatusCodes.Status202Accepted)]
@@ -56,18 +57,18 @@ public class TrendyolIntegrationController(
 
     /// <summary>Arka plan işlerini beklemeden elle tetikler.</summary>
     [HttpPost("sync/listings")]
-    public async Task<IActionResult> SyncListings(CancellationToken cancellationToken) =>
-        Ok(new { batches = await batches.RefreshPendingAsync(cancellationToken), updated = await listings.RefreshStatusesAsync(cancellationToken) });
+    public async Task<ListingSyncResponse> SyncListings(CancellationToken cancellationToken) =>
+        new(await batches.RefreshPendingAsync(cancellationToken), await listings.RefreshStatusesAsync(cancellationToken));
 
     [HttpPost("sync/inventory")]
-    public async Task<IActionResult> SyncInventory(CancellationToken cancellationToken) =>
-        Ok(new { processed = await inventory.SyncPendingAsync(cancellationToken) });
+    public async Task<ProcessedCountResponse> SyncInventory(CancellationToken cancellationToken) =>
+        new(await inventory.SyncPendingAsync(cancellationToken));
 
     [HttpPost("sync/orders")]
     public async Task<OrderImportSummary> SyncOrders(CancellationToken cancellationToken) =>
         await orderImport.ImportAsync(MarketplaceNames.Trendyol, cancellationToken);
 
     [HttpPost("sync/order-status")]
-    public async Task<IActionResult> SyncOrderStatus(CancellationToken cancellationToken) =>
-        Ok(new { processed = await orderStatus.SyncPendingAsync(cancellationToken) });
+    public async Task<ProcessedCountResponse> SyncOrderStatus(CancellationToken cancellationToken) =>
+        new(await orderStatus.SyncPendingAsync(cancellationToken));
 }

@@ -16,8 +16,8 @@ namespace ECommerce.API.Controllers.Ordering;
 public class CustomerOrdersController(ICheckoutService checkout, IOrderManagementService orders) : ControllerBase
 {
     [HttpGet("checkout/preview")]
-    public async Task<IActionResult> Preview([FromQuery] PaymentMethod paymentMethod, CancellationToken cancellationToken) =>
-        this.ToActionResult(await checkout.PreviewAsync(User.GetAccountId(), paymentMethod, cancellationToken), Ok);
+    public async Task<ActionResult<CheckoutPreviewDto>> Preview([FromQuery] PaymentMethod paymentMethod, CancellationToken cancellationToken) =>
+        this.ToOk(await checkout.PreviewAsync(User.GetAccountId(), paymentMethod, cancellationToken));
 
     [HttpPost("orders")]
     [ProducesResponseType<OrderDto>(StatusCodes.Status201Created)]
@@ -30,10 +30,10 @@ public class CustomerOrdersController(ICheckoutService checkout, IOrderManagemen
         await orders.ListForCustomerAsync(User.GetAccountId(), page, size, cancellationToken);
 
     [HttpGet("orders/{orderNumber}")]
-    public async Task<IActionResult> Get(string orderNumber, CancellationToken cancellationToken) =>
-        this.ToActionResult(await orders.GetForCustomerAsync(User.GetAccountId(), orderNumber, cancellationToken), Ok);
+    public async Task<ActionResult<OrderDto>> Get(string orderNumber, CancellationToken cancellationToken) =>
+        this.ToOk(await orders.GetForCustomerAsync(User.GetAccountId(), orderNumber, cancellationToken));
 
     [HttpPost("orders/{orderNumber}/cancel")]
-    public async Task<IActionResult> Cancel(string orderNumber, CancellationToken cancellationToken) =>
-        this.ToActionResult(await orders.CancelByCustomerAsync(User.GetAccountId(), orderNumber, cancellationToken), Ok);
+    public async Task<ActionResult<OrderDto>> Cancel(string orderNumber, CancellationToken cancellationToken) =>
+        this.ToOk(await orders.CancelByCustomerAsync(User.GetAccountId(), orderNumber, cancellationToken));
 }

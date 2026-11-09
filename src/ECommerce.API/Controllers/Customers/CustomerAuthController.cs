@@ -44,6 +44,8 @@ public class CustomerAuthController(ICustomerAuthService auth) : ControllerBase
     [HttpPost("refresh")]
     [AllowAnonymous]
     [EnableRateLimiting(SecurityRegistration.AuthRateLimitPolicy)]
+    [ProducesResponseType<AccessTokenResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Refresh(CancellationToken cancellationToken)
     {
         if (!Request.Cookies.TryGetValue(RefreshCookieName, out var token) || string.IsNullOrEmpty(token))
@@ -59,6 +61,7 @@ public class CustomerAuthController(ICustomerAuthService auth) : ControllerBase
 
     [HttpPost("logout")]
     [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Logout(CancellationToken cancellationToken)
     {
         if (Request.Cookies.TryGetValue(RefreshCookieName, out var token) && !string.IsNullOrEmpty(token))
@@ -70,6 +73,8 @@ public class CustomerAuthController(ICustomerAuthService auth) : ControllerBase
 
     [HttpPost("change-password")]
     [Authorize(Policy = SecurityRegistration.CustomerPolicy)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ChangePassword(ChangePasswordRequest request, CancellationToken cancellationToken)
     {
         var result = await auth.ChangePasswordAsync(User.GetAccountId(), request, cancellationToken);

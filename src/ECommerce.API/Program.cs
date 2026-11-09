@@ -80,6 +80,8 @@ builder.Services
                 schema.Type = JsonSchemaType.String;
             return Task.CompletedTask;
         });
+        options.Document.AddOperationTransformer<MultipartFormTransformer>();
+        options.Document.AddDocumentTransformer(MultipartFormTransformer.RemoveFormFileSchema);
         options.Document.AddOperationTransformer((operation, context, _) =>
         {
             // Üretilen client'ta controller başına bir sınıf ve okunur metot adları için: Products_List → ProductsClient.ListAsync.

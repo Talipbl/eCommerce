@@ -21,10 +21,11 @@ public class BrandsController(IBrandAdminService brands) : ControllerBase
         this.ToActionResult(await brands.CreateAsync(request, cancellationToken), b => StatusCode(StatusCodes.Status201Created, b));
 
     [HttpPut("{id:int}")]
-    public async Task<IActionResult> Update(int id, SaveBrandRequest request, CancellationToken cancellationToken) =>
-        this.ToActionResult(await brands.UpdateAsync(id, request, cancellationToken), Ok);
+    public async Task<ActionResult<BrandDto>> Update(int id, SaveBrandRequest request, CancellationToken cancellationToken) =>
+        this.ToOk(await brands.UpdateAsync(id, request, cancellationToken));
 
     [HttpDelete("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken) =>
         this.ToActionResult(await brands.DeleteAsync(id, cancellationToken), _ => NoContent());
 }

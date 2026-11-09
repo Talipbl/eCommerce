@@ -17,12 +17,12 @@ public class CartController(ICartService cart) : ControllerBase
     public async Task<CartDto> Get(CancellationToken cancellationToken) => await cart.GetAsync(User.GetAccountId(), cancellationToken);
 
     [HttpPost("items")]
-    public async Task<IActionResult> AddItem(AddCartItemRequest request, CancellationToken cancellationToken) =>
-        this.ToActionResult(await cart.AddItemAsync(User.GetAccountId(), request, cancellationToken), Ok);
+    public async Task<ActionResult<CartDto>> AddItem(AddCartItemRequest request, CancellationToken cancellationToken) =>
+        this.ToOk(await cart.AddItemAsync(User.GetAccountId(), request, cancellationToken));
 
     [HttpPut("items/{variantId:int}")]
-    public async Task<IActionResult> UpdateItem(int variantId, UpdateCartItemRequest request, CancellationToken cancellationToken) =>
-        this.ToActionResult(await cart.UpdateItemAsync(User.GetAccountId(), variantId, request.Quantity, cancellationToken), Ok);
+    public async Task<ActionResult<CartDto>> UpdateItem(int variantId, UpdateCartItemRequest request, CancellationToken cancellationToken) =>
+        this.ToOk(await cart.UpdateItemAsync(User.GetAccountId(), variantId, request.Quantity, cancellationToken));
 
     [HttpDelete("items/{variantId:int}")]
     public async Task<CartDto> RemoveItem(int variantId, CancellationToken cancellationToken) =>
