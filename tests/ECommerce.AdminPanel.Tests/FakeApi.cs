@@ -5,7 +5,7 @@ using System.Text.Json;
 
 namespace ECommerce.AdminPanel.Tests;
 
-public sealed record RecordedRequest(HttpMethod Method, string Path, string? Bearer, string? Cookie, string? ForwardedFor, string? Body);
+public sealed record RecordedRequest(HttpMethod Method, string Path, string Query, string? Bearer, string? Cookie, string? ForwardedFor, string? Body, string? ContentType);
 
 /// <summary>API'yi taklit eden primary handler; rotası tanımlanmayan istekler 404 döner.</summary>
 public sealed class FakeApi : HttpMessageHandler
@@ -54,10 +54,12 @@ public sealed class FakeApi : HttpMessageHandler
         var recorded = new RecordedRequest(
             request.Method,
             request.RequestUri!.AbsolutePath,
+            request.RequestUri.Query,
             request.Headers.Authorization?.Parameter,
             Header(request, "Cookie"),
             Header(request, "X-Forwarded-For"),
-            request.Content is null ? null : await request.Content.ReadAsStringAsync(cancellationToken));
+            request.Content is null ? null : await request.Content.ReadAsStringAsync(cancellationToken),
+            request.Content?.Headers.ContentType?.MediaType);
         Requests.Enqueue(recorded);
 
         return _routes.TryGetValue($"{request.Method} {recorded.Path}", out var respond)

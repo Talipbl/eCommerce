@@ -34,6 +34,7 @@ public static class ApiClientRegistration
         services.AddApiClient<ITrendyolCatalogClient, TrendyolCatalogClient>();
         services.AddApiClient<ITrendyolIntegrationClient, TrendyolIntegrationClient>();
         services.AddApiClient<ITrendyolBatchesClient, TrendyolBatchesClient>();
+        services.AddScoped<CatalogLookups>();
 
         return services;
     }

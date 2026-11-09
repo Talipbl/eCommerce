@@ -18,6 +18,19 @@ public sealed record ApiProblem(
 {
     private const string DefaultTitle = "İşlem tamamlanamadı.";
 
+    /// <summary>Alan dışı tek satırlık özet; pazaryeri hatalarında bekleme süresi veya cevap kodu eklenir. 409 iş kuralı da olabildiği için API başlığı aynen gösterilir.</summary>
+    public string Summary => this switch
+    {
+        { Status: StatusCodes.Status503ServiceUnavailable, RetryAfter: { } wait } => $"{Title} Yaklaşık {Math.Ceiling(wait.TotalSeconds)} saniye sonra tekrar deneyin.",
+        { UpstreamStatus: { } upstream } => $"{Title} (pazaryeri cevabı: {upstream})",
+        { Detail.Length: > 0 } => $"{Title} {Detail}",
+        _ => Title
+    };
+
+    /// <summary>Form dışı bildirimler için özet, pazaryeri mesajları ve alan hataları tek metinde.</summary>
+    public string Describe() =>
+        string.Join(" ", new[] { Summary }.Concat(Messages).Concat(FieldErrors.Values.SelectMany(m => m)));
+
     public static ApiProblem From(ApiException exception)
     {
         var fieldErrors = new Dictionary<string, IReadOnlyList<string>>();

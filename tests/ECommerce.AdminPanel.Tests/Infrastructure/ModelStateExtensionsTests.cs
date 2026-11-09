@@ -41,13 +41,13 @@ public class ModelStateExtensionsTests
     }
 
     [Fact]
-    public void Conflict_asks_user_to_reload()
+    public void Conflict_shows_the_business_rule_from_api()
     {
         var modelState = new ModelStateDictionary();
 
-        modelState.AddApiProblem(Exception(409, """{"title":"Stok başka bir siparişte değişti."}"""));
+        modelState.AddApiProblem(Exception(409, """{"title":"Alt kategorisi olan kategori silinemez.","status":409}"""));
 
-        Errors(modelState, string.Empty).ShouldBe(["Kayıt başka bir işlemde değişti, sayfayı yenileyip tekrar deneyin."]);
+        Errors(modelState, string.Empty).ShouldBe(["Alt kategorisi olan kategori silinemez."]);
     }
 
     [Fact]

@@ -1,0 +1,92 @@
+@model ProductListPage
+@{
+    ViewData["Title"] = "Ürünler";
+    var filter = Model.Filter;
+}
+
+<div class="d-flex align-items-center gap-2 mb-3">
+    <h1 class="h3 mb-0 me-auto">Ürünler</h1>
+    <a class="btn btn-primary" asp-action="Create">Yeni ürün</a>
+</div>
+
+<form method="get" asp-action="Index" class="row g-2 align-items-end mb-3" role="search">
+    <div class="col-12 col-md-4">
+        <label for="search" class="form-label small">Ara</label>
+        <input id="search" type="search" name="search" value="@filter.Search" class="form-control" placeholder="Ad veya ürün kodu" />
+    </div>
+    <div class="col-6 col-md-3">
+        <label for="categoryId" class="form-label small">Kategori</label>
+        <select id="categoryId" name="categoryId" class="form-select">
+            <option value="">Tümü</option>
+            @foreach (var category in Model.Categories)
+            {
+                <option value="@category.Id" selected="@(filter.CategoryId == category.Id)">@category.IndentedName</option>
+            }
+        </select>
+    </div>
+    <div class="col-6 col-md-2">
+        <label for="brandId" class="form-label small">Marka</label>
+        <select id="brandId" name="brandId" class="form-select">
+            <option value="">Tümü</option>
+            @foreach (var brand in Model.Brands)
+            {
+                <option value="@brand.Id" selected="@(filter.BrandId == brand.Id)">@brand.Name</option>
+            }
+        </select>
+    </div>
+    <div class="col-6 col-md-2">
+        <label for="isActive" class="form-label small">Durum</label>
+        <select id="isActive" name="isActive" class="form-select">
+            <option value="">Tümü</option>
+            <option value="true" selected="@(filter.IsActive == true)">Yayında</option>
+            <option value="false" selected="@(filter.IsActive == false)">Taslak</option>
+        </select>
+    </div>
+    <div class="col-6 col-md-1">
+        <button type="submit" class="btn btn-outline-secondary w-100">Filtrele</button>
+    </div>
+</form>
+
+@if (Model.Result.Content.Count == 0)
+{
+    <p class="text-body-secondary">Filtreye uyan ürün yok.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th></th><th>Ürün</th><th>Marka</th><th>Kategori</th>
+                    <th class="text-end">Varyant</th><th class="text-end">Stok</th><th class="text-end">Fiyat</th><th>Durum</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var product in Model.Result.Content)
+                {
+                    <tr>
+                        <td>
+                            @if (product.ImageUrl is not null)
+                            {
+                                <img src="@product.ImageUrl" alt="" class="product-thumb rounded" loading="lazy" />
+                            }
+                        </td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@product.Id">@product.Name</a>
+                            <div class="small text-body-secondary">@product.ProductCode</div>
+                        </td>
+                        <td>@Model.BrandName(product.BrandId)</td>
+                        <td>@Model.CategoryName(product.CategoryId)</td>
+                        <td class="text-end">@product.VariantCount</td>
+                        <td class="text-end">@Display.Number(product.TotalStock)</td>
+                        <td class="text-end">@Display.Money(product.MinPrice)</td>
+                        <td>
+                            <span class="badge @(product.IsActive ? "text-bg-success" : "text-bg-secondary")">@(product.IsActive ? "Yayında" : "Taslak")</span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_Pager" model="Model.Pager" />
+}

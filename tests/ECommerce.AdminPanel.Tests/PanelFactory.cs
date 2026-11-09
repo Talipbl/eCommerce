@@ -18,8 +18,13 @@ public sealed class PanelFactory(Dictionary<string, string?>? settings = null, F
     public static async Task<HttpResponseMessage> LoginAsync(HttpClient client, CancellationToken cancellationToken, string userName = "admin") =>
         await PostFormAsync(client, "/account/login", new() { ["UserName"] = userName, ["Password"] = "Parola123!" }, cancellationToken);
 
-    public static async Task<HttpResponseMessage> PostFormAsync(
-        HttpClient client, string path, Dictionary<string, string> fields, CancellationToken cancellationToken, string? formPage = null)
+    public static Task<HttpResponseMessage> PostFormAsync(
+        HttpClient client, string path, Dictionary<string, string> fields, CancellationToken cancellationToken, string? formPage = null) =>
+        PostFormPairsAsync(client, path, fields, cancellationToken, formPage);
+
+    /// <summary>Aynı adla birden çok değer gönderen formlar için (ör. görsel sırası).</summary>
+    public static async Task<HttpResponseMessage> PostFormPairsAsync(
+        HttpClient client, string path, IEnumerable<KeyValuePair<string, string>> fields, CancellationToken cancellationToken, string? formPage = null)
     {
         var page = await client.GetStringAsync(formPage ?? path, cancellationToken);
         var token = new HtmlParser().ParseDocument(page)

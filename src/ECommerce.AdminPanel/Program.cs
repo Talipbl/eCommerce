@@ -1,6 +1,8 @@
 using ECommerce.AdminPanel.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Localization;
 using Serilog;
+using System.Globalization;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
 
@@ -26,6 +28,7 @@ builder.Services.AddAntiforgery(options =>
 });
 // Türkçe karakterler HTML'de &#x131; gibi kodlanmasın; Razor yine HTML'e özel karakterleri kodlar.
 builder.Services.AddWebEncoders(options => options.TextEncoderSettings = new TextEncoderSettings(UnicodeRanges.All));
+builder.Services.AddRouting(options => options.LowercaseUrls = true);
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();
@@ -44,6 +47,14 @@ app.UseStatusCodePagesWithReExecute("/error/{0}");
 app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseSerilogRequestLogging();
 app.UseHttpsRedirection();
+// Form değerleri (fiyat vb.) sunucunun kültüründen bağımsız, nokta ondalıkla okunur; Türkçe biçim yalnızca gösterimde (Display).
+app.UseRequestLocalization(new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture(CultureInfo.InvariantCulture),
+    SupportedCultures = [CultureInfo.InvariantCulture],
+    SupportedUICultures = [CultureInfo.InvariantCulture],
+    RequestCultureProviders = []
+});
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();

@@ -30,6 +30,12 @@ public class CategoryAdminService(IRepository<Category> categories, IRepository<
         return Result<CategoryDto>.Success(mapper.Map<CategoryDto>(category));
     }
 
+    public async Task<Result<CategoryDto>> GetAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var category = await categories.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+        return category is null ? Result<CategoryDto>.NotFound("Kategori bulunamadı.") : Result<CategoryDto>.Success(mapper.Map<CategoryDto>(category));
+    }
+
     public async Task<Result<CategoryDto>> UpdateAsync(int id, SaveCategoryRequest request, CancellationToken cancellationToken = default)
     {
         var category = await categories.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);

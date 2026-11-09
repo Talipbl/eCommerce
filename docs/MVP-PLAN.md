@@ -322,6 +322,14 @@ dotnet user-secrets set "Cors:AllowedOrigins:0" "http://localhost:5173"
 - [x] Testler: unit (InMemory) + SQL Server'da sorgu çevirisi için entegrasyon testi (`DashboardEndpointsTests`; yerelde Docker kapalıyken atlanır, CI'da çalışır). Panelde `DashboardClient` kaydedildi.
 - [ ] (Opsiyonel) Yönetici için müşteri listesi/detayı (`/api/v1/customers`); sipariş detayından müşteriye geçiş için. MVP'de yoksa sipariş detayındaki müşteri bilgisi yeterli.
 
+**Katalog ekranları (6.1.5 adım 4) — tamamlandı**
+- [x] Markalar (liste, arama, ekle/düzenle/sil), kategoriler (girintili ağaç, alt kategori ekle, düzenle/taşı/sil; düzenlemede kategorinin kendisi ve alt kategorileri üst kategori listesinde yok), ürünler (filtreli ve sayfalı liste; oluşturma ilk varyantla; detayda bilgi, yayınla/kaldır, sil, varyant ekle/güncelle/sil, görsel yükle/sil/sırala).
+- [x] Görsel sırası sürükle-bırak (`site.js`) veya JavaScript'siz ok düğmeleriyle; silme gibi geri alınamaz işlemler `data-confirm` ile onay ister (CSP'de satır içi script yok).
+- [x] Fiyat girişleri kültürden bağımsız (istekler invariant kültürle işlenir, `1499.90`); gösterim `Display` ile tr-TR ve Europe/Istanbul (`₺1.499,90`). Varyant özellikleri satır başına `Ad: Değer`.
+- [x] API'nin 409 cevabı panelde aynen gösterilir (iş kuralı da olabiliyor: "Alt kategorisi olan kategori silinemez."); 6.1.1'deki "sayfayı yenileyin" eşlemesi kaldırıldı.
+- [x] API doküman düzeltmeleri: `IActionResult` dönen 39 uç `ActionResult<T>`'ye geçti (client'ta `GetAsync` gibi metotlar gövdesiz `Task` dönüyordu), silmeler 204, sayaç cevapları tipli, multipart dosya alanı `string/binary`, para alanları `decimal` (önceden `double` üretiliyordu), `GET /catalog/categories/{id}` eklendi. `OpenApiDocumentTests` bunları koruyor.
+- Doğrulanmadı: ekranlar gerçek API'ye karşı tarayıcıda denenmedi (Docker kapalı); testler sahte API ile.
+
 **6.1.4 Ekranlar ve kullandıkları uçlar**
 
 | Ekran | İçerik | API |

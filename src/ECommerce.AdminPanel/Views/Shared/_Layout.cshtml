@@ -22,6 +22,15 @@
                         <li class="nav-item">
                             <a class="nav-link" asp-controller="Home" asp-action="Index">Dashboard</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Products" asp-action="Index">Ürünler</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Categories" asp-action="Index">Kategoriler</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Brands" asp-action="Index">Markalar</a>
+                        </li>
                     </ul>
                     <div class="d-flex align-items-center gap-2">
                         <a class="nav-link text-light" asp-controller="Account" asp-action="ChangePassword">@User.Identity.Name</a>
@@ -35,6 +44,7 @@
     </nav>
 
     <main class="container-fluid py-4" role="main">
+        <partial name="_Flash" />
         @RenderBody()
     </main>
 

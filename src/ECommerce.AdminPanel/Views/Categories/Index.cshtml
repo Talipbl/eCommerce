@@ -1,0 +1,37 @@
+@model IReadOnlyList<CategoryOption>
+@{
+    ViewData["Title"] = "Kategoriler";
+}
+
+<div class="d-flex align-items-center gap-2 mb-3">
+    <h1 class="h3 mb-0 me-auto">Kategoriler</h1>
+    <a class="btn btn-primary" asp-action="Create">Yeni kök kategori</a>
+</div>
+
+@if (Model.Count == 0)
+{
+    <p class="text-body-secondary">Henüz kategori yok.</p>
+}
+else
+{
+    <ul class="list-group category-tree">
+        @foreach (var category in Model)
+        {
+            <li class="list-group-item d-flex flex-wrap align-items-center gap-2 depth-@Math.Min(category.Depth, 5)">
+                <span class="me-auto">
+                    @category.Name
+                    @if (!category.IsActive)
+                    {
+                        <span class="badge text-bg-secondary ms-1">Pasif</span>
+                    }
+                </span>
+                <a class="btn btn-sm btn-outline-secondary" asp-action="Create" asp-route-parentId="@category.Id">Alt kategori ekle</a>
+                <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@category.Id">Düzenle</a>
+                <form method="post" asp-action="Delete" asp-route-id="@category.Id" class="d-inline"
+                      data-confirm="@category.Name kategorisi silinsin mi?">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Sil</button>
+                </form>
+            </li>
+        }
+    </ul>
+}

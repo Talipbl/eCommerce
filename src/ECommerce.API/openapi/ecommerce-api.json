@@ -3500,6 +3500,45 @@
       }
     },
     "/api/v1/catalog/categories/{id}": {
+      "get": {
+        "tags": [
+          "Katalog - Kategoriler"
+        ],
+        "operationId": "Categories_Get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryDto"
+                }
+              }
+            }
+          }
+        }
+      },
       "put": {
         "tags": [
           "Katalog - Kategoriler"
@@ -4339,7 +4378,7 @@
             "in": "query",
             "schema": {
               "type": "number",
-              "format": "double"
+              "format": "decimal"
             }
           },
           {
@@ -4347,7 +4386,7 @@
             "in": "query",
             "schema": {
               "type": "number",
-              "format": "double"
+              "format": "decimal"
             }
           },
           {
@@ -5220,7 +5259,7 @@
           },
           "subtotal": {
             "type": "number",
-            "format": "double"
+            "format": "decimal"
           },
           "itemCount": {
             "type": "integer",
@@ -5270,11 +5309,11 @@
           },
           "unitPrice": {
             "type": "number",
-            "format": "double"
+            "format": "decimal"
           },
           "listPrice": {
             "type": "number",
-            "format": "double",
+            "format": "decimal",
             "nullable": true
           },
           "quantity": {
@@ -5283,7 +5322,7 @@
           },
           "lineTotal": {
             "type": "number",
-            "format": "double"
+            "format": "decimal"
           },
           "availableStock": {
             "type": "integer",
@@ -5561,7 +5600,7 @@
           },
           "total": {
             "type": "number",
-            "format": "double"
+            "format": "decimal"
           },
           "orderCount": {
             "type": "integer",
@@ -5580,19 +5619,19 @@
         "properties": {
           "subtotal": {
             "type": "number",
-            "format": "double"
+            "format": "decimal"
           },
           "shippingFee": {
             "type": "number",
-            "format": "double"
+            "format": "decimal"
           },
           "paymentFee": {
             "type": "number",
-            "format": "double"
+            "format": "decimal"
           },
           "total": {
             "type": "number",
-            "format": "double"
+            "format": "decimal"
           }
         }
       },
@@ -5660,11 +5699,11 @@
           },
           "listPrice": {
             "type": "number",
-            "format": "double"
+            "format": "decimal"
           },
           "salePrice": {
             "type": "number",
-            "format": "double"
+            "format": "decimal"
           },
           "vatRate": {
             "type": "integer",
@@ -5688,7 +5727,7 @@
           },
           "dimensionalWeight": {
             "type": "number",
-            "format": "double",
+            "format": "decimal",
             "nullable": true
           },
           "origin": {
@@ -6331,19 +6370,19 @@
           },
           "subtotal": {
             "type": "number",
-            "format": "double"
+            "format": "decimal"
           },
           "shippingFee": {
             "type": "number",
-            "format": "double"
+            "format": "decimal"
           },
           "paymentFee": {
             "type": "number",
-            "format": "double"
+            "format": "decimal"
           },
           "total": {
             "type": "number",
-            "format": "double"
+            "format": "decimal"
           },
           "note": {
             "type": "string",
@@ -6480,7 +6519,7 @@
           },
           "unitPrice": {
             "type": "number",
-            "format": "double"
+            "format": "decimal"
           },
           "quantity": {
             "type": "integer",
@@ -6492,7 +6531,7 @@
           },
           "lineTotal": {
             "type": "number",
-            "format": "double"
+            "format": "decimal"
           }
         }
       },
@@ -6579,7 +6618,7 @@
           },
           "total": {
             "type": "number",
-            "format": "double"
+            "format": "decimal"
           },
           "itemCount": {
             "type": "integer",
@@ -6965,12 +7004,12 @@
           },
           "salePrice": {
             "type": "number",
-            "format": "double",
+            "format": "decimal",
             "nullable": true
           },
           "listPrice": {
             "type": "number",
-            "format": "double",
+            "format": "decimal",
             "nullable": true
           }
         }
@@ -7151,7 +7190,7 @@
           },
           "minPrice": {
             "type": "number",
-            "format": "double",
+            "format": "decimal",
             "nullable": true
           },
           "imageUrl": {
@@ -7254,7 +7293,7 @@
           },
           "total": {
             "type": "number",
-            "format": "double"
+            "format": "decimal"
           },
           "orderCount": {
             "type": "integer",
@@ -7426,19 +7465,19 @@
           },
           "lineUnitPrice": {
             "type": "number",
-            "format": "double"
+            "format": "decimal"
           },
           "lineGrossAmount": {
             "type": "number",
-            "format": "double"
+            "format": "decimal"
           },
           "lineTotalDiscount": {
             "type": "number",
-            "format": "double"
+            "format": "decimal"
           },
           "vatRate": {
             "type": "number",
-            "format": "double",
+            "format": "decimal",
             "nullable": true
           },
           "currencyCode": {
@@ -7505,15 +7544,15 @@
           },
           "packageGrossAmount": {
             "type": "number",
-            "format": "double"
+            "format": "decimal"
           },
           "packageTotalDiscount": {
             "type": "number",
-            "format": "double"
+            "format": "decimal"
           },
           "packageTotalPrice": {
             "type": "number",
-            "format": "double"
+            "format": "decimal"
           },
           "cargoProviderName": {
             "type": "string",
@@ -7707,11 +7746,11 @@
           },
           "minPrice": {
             "type": "number",
-            "format": "double"
+            "format": "decimal"
           },
           "listPrice": {
             "type": "number",
-            "format": "double",
+            "format": "decimal",
             "nullable": true
           },
           "inStock": {
@@ -7807,11 +7846,11 @@
           },
           "price": {
             "type": "number",
-            "format": "double"
+            "format": "decimal"
           },
           "listPrice": {
             "type": "number",
-            "format": "double",
+            "format": "decimal",
             "nullable": true
           },
           "inStock": {
@@ -8059,12 +8098,12 @@
         "properties": {
           "salePrice": {
             "type": "number",
-            "format": "double",
+            "format": "decimal",
             "nullable": true
           },
           "listPrice": {
             "type": "number",
-            "format": "double",
+            "format": "decimal",
             "nullable": true
           }
         }
@@ -8185,12 +8224,12 @@
           },
           "listPrice": {
             "type": "number",
-            "format": "double",
+            "format": "decimal",
             "nullable": true
           },
           "salePrice": {
             "type": "number",
-            "format": "double",
+            "format": "decimal",
             "nullable": true
           },
           "vatRate": {
@@ -8315,7 +8354,7 @@
           },
           "dimensionalWeight": {
             "type": "number",
-            "format": "double",
+            "format": "decimal",
             "nullable": true
           },
           "vatRate": {
@@ -8527,11 +8566,11 @@
         "properties": {
           "price": {
             "type": "number",
-            "format": "double"
+            "format": "decimal"
           },
           "listPrice": {
             "type": "number",
-            "format": "double",
+            "format": "decimal",
             "nullable": true
           },
           "stockQuantity": {
@@ -8589,11 +8628,11 @@
           },
           "price": {
             "type": "number",
-            "format": "double"
+            "format": "decimal"
           },
           "listPrice": {
             "type": "number",
-            "format": "double",
+            "format": "decimal",
             "nullable": true
           },
           "stockQuantity": {
@@ -8630,11 +8669,11 @@
           },
           "price": {
             "type": "number",
-            "format": "double"
+            "format": "decimal"
           },
           "listPrice": {
             "type": "number",
-            "format": "double",
+            "format": "decimal",
             "nullable": true
           },
           "stockQuantity": {

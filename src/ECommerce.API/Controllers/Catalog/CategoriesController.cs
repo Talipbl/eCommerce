@@ -15,6 +15,10 @@ public class CategoriesController(ICategoryAdminService categories) : Controller
     public async Task<IReadOnlyList<CategoryTreeDto>> GetTree(CancellationToken cancellationToken) =>
         await categories.GetTreeAsync(cancellationToken);
 
+    [HttpGet("{id:int}")]
+    public async Task<ActionResult<CategoryDto>> Get(int id, CancellationToken cancellationToken) =>
+        this.ToOk(await categories.GetAsync(id, cancellationToken));
+
     [HttpPost]
     [ProducesResponseType<CategoryDto>(StatusCodes.Status201Created)]
     public async Task<IActionResult> Create(SaveCategoryRequest request, CancellationToken cancellationToken) =>

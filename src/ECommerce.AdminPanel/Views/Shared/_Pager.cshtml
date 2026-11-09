@@ -1,0 +1,27 @@
+@model PagerModel
+@{
+    // Mevcut filtreler korunur, yalnızca sayfa değişir.
+    string Link(int page)
+    {
+        var query = Context.Request.Query
+            .Where(q => !q.Key.Equals("page", StringComparison.OrdinalIgnoreCase))
+            .SelectMany(q => q.Value.Select(v => new KeyValuePair<string, string?>(q.Key, v)))
+            .Append(new KeyValuePair<string, string?>("page", page.ToString()));
+        return Context.Request.Path + QueryString.Create(query).ToUriComponent();
+    }
+}
+@if (Model.TotalPages > 1)
+{
+    <nav aria-label="Sayfalar" class="d-flex align-items-center gap-3">
+        <ul class="pagination mb-0">
+            <li class="page-item @(Model.Page == 0 ? "disabled" : "")">
+                <a class="page-link" href="@Link(Model.Page - 1)">Önceki</a>
+            </li>
+            <li class="page-item active" aria-current="page"><span class="page-link">@(Model.Page + 1) / @Model.TotalPages</span></li>
+            <li class="page-item @(Model.Page + 1 >= Model.TotalPages ? "disabled" : "")">
+                <a class="page-link" href="@Link(Model.Page + 1)">Sonraki</a>
+            </li>
+        </ul>
+        <span class="text-body-secondary small">@Display.Number(Model.TotalElements) kayıt</span>
+    </nav>
+}

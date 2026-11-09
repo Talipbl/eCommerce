@@ -31,9 +31,16 @@ public class PanelPipelineTests
     [InlineData("/account/login", false)]
     [InlineData("/", true)]
     [InlineData("/account/password", true)]
+    [InlineData("/brands", true)]
+    [InlineData("/brands/new", true)]
+    [InlineData("/categories", true)]
+    [InlineData("/categories/new", true)]
+    [InlineData("/products", true)]
+    [InlineData("/products/new", true)]
+    [InlineData("/products/7", true)]
     public async Task Pages_have_no_inline_scripts_or_styles(string path, bool signedIn)
     {
-        await using var factory = new PanelFactory();
+        await using var factory = new PanelFactory(api: CatalogApi.Create());
         var client = factory.CreatePanelClient();
         if (signedIn)
             await PanelFactory.LoginAsync(client, Ct);
@@ -42,6 +49,7 @@ public class PanelPipelineTests
         var document = new HtmlParser().ParseDocument(html);
 
         document.QuerySelectorAll("script").ShouldAllBe(s => s.HasAttribute("src"));
+        document.QuerySelectorAll("[onclick], [onsubmit], [onchange]").ShouldBeEmpty();
         document.QuerySelectorAll("style, [style]").ShouldBeEmpty();
     }
 

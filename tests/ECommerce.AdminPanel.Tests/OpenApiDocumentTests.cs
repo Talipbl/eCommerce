@@ -5,14 +5,16 @@ namespace ECommerce.AdminPanel.Tests;
 /// <summary>Panel client'ı bu dokümandan üretildiği için cevap şeması eksik uç, gövdesiz <c>Task</c> dönen bir client metodu demektir.</summary>
 public class OpenApiDocumentTests
 {
-    private static JsonElement Paths()
+    private static JsonElement Paths() => Document().GetProperty("paths");
+
+    private static JsonElement Document()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
         while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "ECommerce.sln")))
             directory = directory.Parent;
 
         var path = Path.Combine(directory!.FullName, "src", "ECommerce.API", "openapi", "ecommerce-api.json");
-        return JsonDocument.Parse(File.ReadAllText(path)).RootElement.GetProperty("paths");
+        return JsonDocument.Parse(File.ReadAllText(path)).RootElement;
     }
 
     private static IEnumerable<(string Operation, JsonElement Responses)> Operations() =>
@@ -35,6 +37,14 @@ public class OpenApiDocumentTests
             .Where(op => op.Responses.TryGetProperty("200", out var ok) && !ok.TryGetProperty("content", out _))
             .Select(op => op.Operation)
             .ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Money_fields_are_decimal()
+    {
+        var components = Document().GetProperty("components").GetProperty("schemas");
+
+        components.GetProperty("VariantInput").GetProperty("properties").GetProperty("price").GetProperty("format").GetString().ShouldBe("decimal");
     }
 
     [Fact]

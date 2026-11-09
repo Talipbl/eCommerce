@@ -78,6 +78,9 @@ builder.Services
             var type = Nullable.GetUnderlyingType(context.JsonTypeInfo.Type) ?? context.JsonTypeInfo.Type;
             if (type.IsEnum)
                 schema.Type = JsonSchemaType.String;
+            // Para alanları client'ta double değil decimal üretilsin.
+            if (type == typeof(decimal))
+                schema.Format = "decimal";
             return Task.CompletedTask;
         });
         options.Document.AddOperationTransformer<MultipartFormTransformer>();

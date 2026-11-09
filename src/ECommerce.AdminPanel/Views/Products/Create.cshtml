@@ -1,0 +1,30 @@
+@model ProductCreatePage
+@{
+    ViewData["Title"] = "Yeni ürün";
+    ViewData["Brands"] = Model.Brands;
+    ViewData["Categories"] = Model.Categories;
+}
+
+<h1 class="h3 mb-3">Yeni ürün</h1>
+
+<form method="post" asp-action="Create" novalidate>
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+    <section class="card mb-3">
+        <div class="card-body">
+            <h2 class="h5 card-title">Ürün bilgileri</h2>
+            <partial name="_DetailsFields" for="Details" view-data="ViewData" />
+        </div>
+    </section>
+
+    <section class="card mb-3">
+        <div class="card-body">
+            <h2 class="h5 card-title">İlk varyant</h2>
+            <p class="text-body-secondary small">Diğer varyantlar ve görseller ürün oluşturulduktan sonra eklenir. Ürün taslak olarak oluşur.</p>
+            <partial name="_VariantFields" for="Variant" />
+        </div>
+    </section>
+
+    <button type="submit" class="btn btn-primary">Ürünü oluştur</button>
+    <a class="btn btn-link" asp-action="Index">Vazgeç</a>
+</form>
