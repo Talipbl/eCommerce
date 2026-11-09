@@ -8,21 +8,6 @@ using Microsoft.Extensions.Options;
 
 namespace ECommerce.Application.Ordering;
 
-public interface IOrderManagementService
-{
-    Task<PagedResult<OrderSummaryDto>> ListForCustomerAsync(int customerId, int page, int size, CancellationToken cancellationToken = default);
-    Task<Result<OrderDto>> GetForCustomerAsync(int customerId, string orderNumber, CancellationToken cancellationToken = default);
-    Task<Result<OrderDto>> CancelByCustomerAsync(int customerId, string orderNumber, CancellationToken cancellationToken = default);
-
-    Task<PagedResult<OrderSummaryDto>> ListAsync(OrderAdminQuery query, CancellationToken cancellationToken = default);
-    Task<Result<OrderDto>> GetAsync(int id, CancellationToken cancellationToken = default);
-    Task<Result<OrderDto>> ConfirmPaymentAsync(int id, CancellationToken cancellationToken = default);
-    Task<Result<OrderDto>> StartPreparingAsync(int id, CancellationToken cancellationToken = default);
-    Task<Result<OrderDto>> ShipAsync(int id, ShipOrderRequest request, CancellationToken cancellationToken = default);
-    Task<Result<OrderDto>> DeliverAsync(int id, CancellationToken cancellationToken = default);
-    Task<Result<OrderDto>> CancelAsync(int id, string reason, CancellationToken cancellationToken = default);
-}
-
 public class OrderManagementService(
     IRepository<Order> orders,
     IRepository<Product> products,
@@ -146,19 +131,4 @@ public class OrderManagementService(
     private Task<Order?> FindAsync(int id, CancellationToken cancellationToken) => orders.FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
 
     private static Result<OrderDto> NotFound() => Result<OrderDto>.NotFound("Sipariş bulunamadı.");
-}
-
-public class ShipOrderRequestValidator : AbstractValidator<ShipOrderRequest>
-{
-    public ShipOrderRequestValidator()
-    {
-        RuleFor(x => x.CargoProvider).MaximumLength(100);
-        RuleFor(x => x.TrackingNumber).MaximumLength(100);
-        RuleFor(x => x.InvoiceNumber).MaximumLength(50);
-    }
-}
-
-public class CancelOrderRequestValidator : AbstractValidator<CancelOrderRequest>
-{
-    public CancelOrderRequestValidator() => RuleFor(x => x.Reason).NotEmpty().MaximumLength(500);
 }

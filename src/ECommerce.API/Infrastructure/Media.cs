@@ -1,4 +1,4 @@
-using ECommerce.Application.Catalog;
+using ECommerce.Application.Common;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 

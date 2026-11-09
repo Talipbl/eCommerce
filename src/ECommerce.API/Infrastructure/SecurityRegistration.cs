@@ -4,7 +4,6 @@ using ECommerce.Customers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -20,7 +19,6 @@ public static class SecurityRegistration
 
     public static IServiceCollection AddApiSecurity(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddAdminAuthentication(configuration);
         services.AddHostedService<AdminSeedHostedService>();
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();

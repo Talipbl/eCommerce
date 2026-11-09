@@ -103,6 +103,6 @@ public class TrendyolCatalogServiceTests
 
         var result = await _service.SearchBrandsAsync("Acme", Ct);
 
-        result.Value.ShouldHaveSingleItem().ShouldBe(new BrandDto(10, "Acme"));
+        result.Value.ShouldHaveSingleItem().ShouldBe(new TrendyolBrandDto(10, "Acme"));
     }
 }

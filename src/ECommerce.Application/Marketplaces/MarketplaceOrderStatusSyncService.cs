@@ -4,11 +4,6 @@ using ECommerce.Ordering;
 
 namespace ECommerce.Application.Marketplaces;
 
-public interface IMarketplaceOrderStatusSyncService
-{
-    Task<int> SyncPendingAsync(CancellationToken cancellationToken = default);
-}
-
 /// <summary>
 /// Yerelde ilerletilen pazaryeri siparişlerinin durumunu (Picking, Invoiced) sırayla bildirir. Aynı siparişin önceki bildirimi
 /// beklerken sonraki gönderilmez; kalıcı hata sıradakileri engellemez.

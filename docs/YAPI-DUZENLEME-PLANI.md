@@ -90,16 +90,16 @@ Application/Common/
 Her faz ayrı branch + PR; testler her adımda yeşil kalır. Sıra, en çok karışıklığın olduğu yerden başlar.
 
 ### Faz 1 — Application dosya ayrıştırma (en büyük kazanç)
-- [ ] 1.1 Catalog: `CatalogDtos.cs` bölünür, interface'ler ayrılır, `IMediaUrlBuilder`/`IFileStorage` → `Common/Abstractions`.
-- [ ] 1.2 Customers: `CustomerServices.cs` → `Dtos/CustomerDtos.cs`, `Dtos/AddressDtos.cs`, 2 interface, 2 servis, `Validators/CustomerValidators.cs`.
-- [ ] 1.3 Shopping: `CartService.cs` bölünür; `PurchasableVariant` kendi dosyasına.
-- [ ] 1.4 Ordering: `OrderDtos.cs` → `CheckoutOptions.cs`, `Dtos/CheckoutDtos.cs`, `Dtos/OrderDtos.cs`, `OrderMapping.cs`, `OrderNumbers.cs`; validator'lar `Validators/`.
-- [ ] 1.5 Auth: `AuthModels.cs` → `Dtos/AuthDtos.cs` (`AuthResult`/`AuthError` dahil); `IAuthService`, `ITokenService` ayrı dosyaya; `AuthValidators.cs` → `Validators/`.
-- [ ] 1.6 Marketplaces (genel): `IMarketplaceProvider.cs` → interface + `Dtos/MarketplaceProviderDtos.cs` + `MarketplaceProviders.cs`; sync servislerinin interface/DTO'ları ayrılır; `OutboxKind` DTO dosyasına; `SyncStateRepository` kendi dosyasına.
-- [ ] 1.7 Marketplaces/Trendyol: catalog, listing, order, batch servisleri aynı kalıpla bölünür; `TrendyolProductRequests.cs` → `Dtos/`, validator'lar → `Validators/`.
-- [ ] 1.8 `Marketplaces.Trendyol.BrandDto` → `TrendyolBrandDto` olarak yeniden adlandırılır (OpenAPI şema adı değişir; front-end henüz yok, risk yok).
-- [ ] 1.9 DI: `DependencyInjection.cs` tek dosya kalır ama özellik başına private metotlara bölünür (`AddCatalog()`, `AddCustomers()`, `AddOrdering()`, `AddMarketplaces()`, `AddTrendyolIntegration()`). Auth kaydı da bu dosyaya `AddAuth()` olarak taşınır; `Program.cs` sade kalır.
-- [ ] 1.10 Mapster kalır: `ServiceRegistrations/MappingRegistration.cs` → `Common/Mapping/MappingRegistration.cs` (namespace aynı), `ServiceRegistrations/` klasörü kaldırılır. Eşlemelerin Mapster'a geçişi Faz 5'te.
+- [x] 1.1 Catalog: `CatalogDtos.cs` bölünür, interface'ler ayrılır, `IMediaUrlBuilder`/`IFileStorage` → `Common/Abstractions`.
+- [x] 1.2 Customers: `CustomerServices.cs` → `Dtos/CustomerDtos.cs`, `Dtos/AddressDtos.cs`, 2 interface, 2 servis, `Validators/CustomerValidators.cs`.
+- [x] 1.3 Shopping: `CartService.cs` bölünür; `PurchasableVariant` kendi dosyasına.
+- [x] 1.4 Ordering: `OrderDtos.cs` → `CheckoutOptions.cs`, `Dtos/CheckoutDtos.cs`, `Dtos/OrderDtos.cs`, `OrderMapping.cs`, `OrderNumbers.cs`; validator'lar `Validators/`.
+- [x] 1.5 Auth: `AuthModels.cs` → `Dtos/AuthDtos.cs` (`AuthResult`/`AuthError` dahil); `IAuthService`, `ITokenService` ayrı dosyaya; `AuthValidators.cs` → `Validators/`.
+- [x] 1.6 Marketplaces (genel): `IMarketplaceProvider.cs` → interface + `Dtos/MarketplaceProviderDtos.cs` + `MarketplaceProviders.cs`; sync servislerinin interface/DTO'ları ayrılır; `OutboxKind` DTO dosyasına; `SyncStateRepository` kendi dosyasına.
+- [x] 1.7 Marketplaces/Trendyol: catalog, listing, order, batch servisleri aynı kalıpla bölünür; `TrendyolProductRequests.cs` → `Dtos/`, validator'lar → `Validators/`.
+- [x] 1.8 `Marketplaces.Trendyol.BrandDto` → `TrendyolBrandDto` olarak yeniden adlandırılır (OpenAPI şema adı değişir; front-end henüz yok, risk yok).
+- [x] 1.9 DI: `DependencyInjection.cs` tek dosya kalır ama özellik başına private metotlara bölünür (`AddCatalog()`, `AddCustomers()`, `AddOrdering()`, `AddMarketplaces()`, `AddTrendyolIntegration()`). Auth kaydı da bu dosyaya `AddAuth()` olarak taşınır; `Program.cs` sade kalır.
+- [x] 1.10 Mapster kalır: `ServiceRegistrations/MappingRegistration.cs` → `Common/Mapping/MappingRegistration.cs` (namespace aynı), `ServiceRegistrations/` klasörü kaldırılır. Eşlemelerin Mapster'a geçişi Faz 5'te.
 
 **Kabul:** Her `.cs` dosyası tek bir role sahip (interface / servis / DTO grubu / validator grubu / options / yardımcı). 300+ satırlık karma dosya kalmaz.
 

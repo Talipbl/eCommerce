@@ -1,4 +1,3 @@
-using ECommerce.Application.Catalog;
 using ECommerce.Application.Common;
 using ECommerce.Catalog;
 using ECommerce.Core.Persistence;
@@ -7,28 +6,6 @@ using FluentValidation;
 using Trendyol.Client.Products;
 
 namespace ECommerce.Application.Marketplaces.Trendyol;
-
-public record MapCategoryRequest(long ExternalCategoryId, string? ExternalCategoryName);
-
-public record MapBrandRequest(long ExternalBrandId, string? ExternalBrandName);
-
-public record CategoryMappingDto(int CategoryId, long ExternalCategoryId, string? ExternalCategoryName, IReadOnlyList<CategoryAttributeMapping> Attributes);
-
-public record SetCategoryAttributesRequest(IReadOnlyList<CategoryAttributeMapping> Attributes);
-
-public record BrandMappingDto(int BrandId, long ExternalBrandId, string? ExternalBrandName);
-
-public interface ITrendyolListingService
-{
-    Task<IReadOnlyList<CategoryMappingDto>> ListCategoryMappingsAsync(CancellationToken cancellationToken = default);
-    Task<Result<CategoryMappingDto>> MapCategoryAsync(int categoryId, MapCategoryRequest request, CancellationToken cancellationToken = default);
-    Task<Result<CategoryMappingDto>> SetCategoryAttributesAsync(int categoryId, SetCategoryAttributesRequest request, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<BrandMappingDto>> ListBrandMappingsAsync(CancellationToken cancellationToken = default);
-    Task<Result<BrandMappingDto>> MapBrandAsync(int brandId, MapBrandRequest request, CancellationToken cancellationToken = default);
-    Task<Result<ListingDto>> GetAsync(int productId, CancellationToken cancellationToken = default);
-    Task<Result<ListingDto>> PublishAsync(int productId, PublishListingRequest request, CancellationToken cancellationToken = default);
-    Task<int> RefreshStatusesAsync(CancellationToken cancellationToken = default);
-}
 
 /// <summary>
 /// Yerel ürünleri Trendyol'a yayınlar ve listing durumunu batch sonucu ile onay durumuna göre günceller.
@@ -327,14 +304,4 @@ public class TrendyolListingService(
     private static ListingDto ToDto(MarketplaceListing l) =>
         new(l.ProductId, l.Status, l.ExternalContentId, l.LastBatchRequestId, l.StatusMessage, l.LastSubmittedAt, l.LastCheckedAt,
             l.ProductAttributes, l.VariantAttributes, l.DeliveryDuration);
-}
-
-public class PublishListingRequestValidator : AbstractValidator<PublishListingRequest>
-{
-    public PublishListingRequestValidator()
-    {
-        RuleForEach(x => x.ProductAttributes).Must(a => a.AttributeId > 0 && (a.ValueId is not null || !string.IsNullOrWhiteSpace(a.CustomValue)))
-            .WithMessage("Her özellik için değer numarası veya serbest değer girilmelidir.");
-        RuleFor(x => x.DeliveryDuration).InclusiveBetween(1, 30).When(x => x.DeliveryDuration is not null);
-    }
 }

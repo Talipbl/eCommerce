@@ -5,11 +5,6 @@ using ECommerce.Marketplaces;
 
 namespace ECommerce.Application.Marketplaces;
 
-public interface IMarketplaceInventorySyncService
-{
-    Task<int> SyncPendingAsync(CancellationToken cancellationToken = default);
-}
-
 /// <summary>
 /// Stok/fiyat outbox'ını her pazaryerinde kabul edilmiş ürünler için toplu gönderir. Rate limit'te pazaryeri beklemeye alınır,
 /// geçici hatalar artan aralıkla tekrar denenir, reddedilen istekler hata mesajıyla kapatılır.
@@ -99,16 +94,5 @@ public class MarketplaceInventorySyncService(
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return processed;
-    }
-}
-
-internal static class SyncStateRepository
-{
-    public static async Task<MarketplaceSyncState> GetOrCreateAsync(this IRepository<MarketplaceSyncState> states, string marketplace, string job, CancellationToken cancellationToken)
-    {
-        var state = await states.FirstOrDefaultAsync(s => s.Marketplace == marketplace && s.Job == job, cancellationToken);
-        if (state is null)
-            states.Add(state = MarketplaceSyncState.Create(marketplace, job));
-        return state;
     }
 }

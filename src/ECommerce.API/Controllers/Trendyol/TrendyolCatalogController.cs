@@ -32,7 +32,7 @@ public class TrendyolCatalogController(ITrendyolCatalogService catalog) : Contro
         this.ToActionResult(await catalog.GetAttributeValuesAsync(categoryId, attributeId, cancellationToken), Ok);
 
     [HttpGet("brands")]
-    [ProducesResponseType<IReadOnlyList<BrandDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<IReadOnlyList<TrendyolBrandDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> SearchBrands([FromQuery] string name, CancellationToken cancellationToken) =>
         this.ToActionResult(await catalog.SearchBrandsAsync(name, cancellationToken), Ok);
 }

@@ -1,4 +1,5 @@
 using ECommerce.Application.Catalog;
+using ECommerce.Application.Common;
 using ECommerce.Catalog;
 using ECommerce.Persistence;
 using ECommerce.UnitTests.Persistence;

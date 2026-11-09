@@ -5,24 +5,6 @@ using Trendyol.Client.Products;
 
 namespace ECommerce.Application.Marketplaces.Trendyol;
 
-public record BatchDto(
-    string BatchRequestId,
-    MarketplaceBatchOperation Operation,
-    MarketplaceBatchStatus Status,
-    int ItemCount,
-    int FailedItemCount,
-    DateTime CreatedAt,
-    DateTime? LastCheckedAt,
-    DateTime? CompletedAt,
-    IReadOnlyList<MarketplaceBatchFailure> Failures);
-
-public interface ITrendyolBatchService
-{
-    Task<PagedResult<BatchDto>> ListAsync(MarketplaceBatchStatus? status, int page, int size, CancellationToken cancellationToken = default);
-    Task<BatchDto?> GetAsync(string batchRequestId, CancellationToken cancellationToken = default);
-    Task<int> RefreshPendingAsync(CancellationToken cancellationToken = default);
-}
-
 /// <summary>
 /// Bekleyen batch'lerin sonucunu Trendyol'dan sorgular. Trendyol sonuçları ~4 saat sakladığı için daha eski kayıtlar süresi dolmuş sayılır.
 /// </summary>

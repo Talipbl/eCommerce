@@ -8,13 +8,6 @@ using System.Text;
 
 namespace ECommerce.Application.Auth;
 
-public interface ITokenService
-{
-    (string Token, DateTime ExpiresAt) CreateAccessToken(IAccount account, DateTime now);
-    string CreateRefreshToken();
-    string HashRefreshToken(string refreshToken);
-}
-
 public class JwtTokenService(IOptions<JwtOptions> options) : ITokenService
 {
     private readonly JwtOptions _options = options.Value;

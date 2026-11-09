@@ -4,25 +4,6 @@ using Trendyol.Client.Catalog;
 
 namespace ECommerce.Application.Marketplaces.Trendyol;
 
-public record CategoryNodeDto(long Id, string Name, long? ParentId, bool IsLeaf, IReadOnlyList<CategoryNodeDto> SubCategories);
-
-public record CategorySearchResultDto(long Id, string Name, string Path);
-
-public record CategoryAttributeDto(long Id, string Name, bool Required, bool AllowCustom, bool Varianter, bool Slicer, bool AllowMultipleValues);
-
-public record AttributeValueDto(long Id, string Value);
-
-public record BrandDto(long Id, string Name);
-
-public interface ITrendyolCatalogService
-{
-    Task<MarketplaceResult<IReadOnlyList<CategoryNodeDto>>> GetCategoryTreeAsync(CancellationToken cancellationToken = default);
-    Task<MarketplaceResult<IReadOnlyList<CategorySearchResultDto>>> SearchCategoriesAsync(string term, int limit = 50, CancellationToken cancellationToken = default);
-    Task<MarketplaceResult<IReadOnlyList<CategoryAttributeDto>>> GetCategoryAttributesAsync(long categoryId, CancellationToken cancellationToken = default);
-    Task<MarketplaceResult<IReadOnlyList<AttributeValueDto>>> GetAttributeValuesAsync(long categoryId, long attributeId, CancellationToken cancellationToken = default);
-    Task<MarketplaceResult<IReadOnlyList<BrandDto>>> SearchBrandsAsync(string name, CancellationToken cancellationToken = default);
-}
-
 /// <summary>
 /// Trendyol referans verileri. Servis limiti düşük olduğu için başarılı cevaplar önbelleğe alınır, hatalar alınmaz.
 /// </summary>
@@ -81,14 +62,14 @@ public class TrendyolCatalogService(ITrendyolCatalogClient client, IMemoryCache 
             return MarketplaceResult<IReadOnlyList<AttributeValueDto>>.Success(values);
         });
 
-    public async Task<MarketplaceResult<IReadOnlyList<BrandDto>>> SearchBrandsAsync(string name, CancellationToken cancellationToken = default)
+    public async Task<MarketplaceResult<IReadOnlyList<TrendyolBrandDto>>> SearchBrandsAsync(string name, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(name))
-            return MarketplaceResult<IReadOnlyList<BrandDto>>.Failure(MarketplaceError.Validation("Marka adı boş olamaz."));
+            return MarketplaceResult<IReadOnlyList<TrendyolBrandDto>>.Failure(MarketplaceError.Validation("Marka adı boş olamaz."));
 
         return await CachedAsync($"trendyol:brands:{name.Trim()}", async () =>
             (await client.SearchBrandsAsync(name.Trim(), cancellationToken))
-                .ToMarketplaceResult<IReadOnlyList<TrendyolBrand>, IReadOnlyList<BrandDto>>(brands => brands.Select(b => new BrandDto(b.Id, b.Name)).ToList()));
+                .ToMarketplaceResult<IReadOnlyList<TrendyolBrand>, IReadOnlyList<TrendyolBrandDto>>(brands => brands.Select(b => new TrendyolBrandDto(b.Id, b.Name)).ToList()));
     }
 
     private async Task<MarketplaceResult<T>> CachedAsync<T>(string key, Func<Task<MarketplaceResult<T>>> factory)

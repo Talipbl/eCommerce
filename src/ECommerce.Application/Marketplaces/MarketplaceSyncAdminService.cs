@@ -4,39 +4,6 @@ using ECommerce.Marketplaces;
 
 namespace ECommerce.Application.Marketplaces;
 
-public enum OutboxKind
-{
-    Inventory,
-    OrderStatus
-}
-
-public record SyncLogQuery(string? Marketplace, SyncOperation? Operation, bool? Succeeded, int Page = 0, int Size = 50);
-
-public record SyncLogDto(long Id, string Marketplace, SyncOperation Operation, string? Reference, bool Succeeded, string? Message, DateTime OccurredAt);
-
-public record SyncStateDto(string Marketplace, string Job, DateTime? Cursor, DateTime? PausedUntil, DateTime? LastRunAt, string? LastError);
-
-public record OutboxEntryDto(
-    int Id,
-    OutboxKind Kind,
-    string Reference,
-    string? Action,
-    OutboxStatus Status,
-    int Attempts,
-    DateTime? NextAttemptAt,
-    DateTime? ProcessedAt,
-    string? Error,
-    DateTime CreatedDate);
-
-public interface IMarketplaceSyncAdminService
-{
-    Task<PagedResult<SyncLogDto>> ListLogsAsync(SyncLogQuery query, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<SyncStateDto>> ListStatesAsync(CancellationToken cancellationToken = default);
-    Task<PagedResult<OutboxEntryDto>> ListOutboxAsync(OutboxKind kind, OutboxStatus? status, int page, int size, CancellationToken cancellationToken = default);
-    Task<Result<OutboxEntryDto>> RetryAsync(OutboxKind kind, int id, CancellationToken cancellationToken = default);
-    Task<int> RetryAllFailedAsync(OutboxKind kind, CancellationToken cancellationToken = default);
-}
-
 /// <summary>Senkron logu, iş durumları ve hatalı outbox kayıtlarının yeniden kuyruğa alınması (yönetici ekranı).</summary>
 public class MarketplaceSyncAdminService(
     IRepository<MarketplaceSyncLog> logs,
