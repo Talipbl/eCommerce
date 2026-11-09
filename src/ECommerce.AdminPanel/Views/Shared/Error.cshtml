@@ -1,0 +1,11 @@
+﻿@model ErrorViewModel
+@{
+    ViewData["Title"] = "Hata";
+}
+
+<div class="py-5 text-center">
+    <p class="display-6 text-body-secondary">@Model.StatusCode</p>
+    <h1 class="h4">@Model.Title</h1>
+    <p class="text-body-secondary small">İstek numarası: <code>@Model.RequestId</code></p>
+    <a class="btn btn-outline-primary" asp-controller="Home" asp-action="Index">Panele dön</a>
+</div>

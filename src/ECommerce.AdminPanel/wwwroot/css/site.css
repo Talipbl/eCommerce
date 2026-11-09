@@ -1,0 +1,14 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 15px;
+  }
+}
+
+body {
+  min-height: 100vh;
+  background-color: var(--bs-tertiary-bg);
+}
