@@ -1,2 +1,0 @@
-﻿Scaffold-DbContext "Server=talipbulundu.com\MSSQLSERVER2014;Database=ECommerce;User Id=root;Password=34Q1wt&n5; Encrypt=false;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models
-

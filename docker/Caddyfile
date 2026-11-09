@@ -1,0 +1,5 @@
+# DOMAIN gerçek bir alan adıysa Let's Encrypt sertifikası alınır; "localhost" ise yerel sertifika üretilir.
+{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy api:8080
+}

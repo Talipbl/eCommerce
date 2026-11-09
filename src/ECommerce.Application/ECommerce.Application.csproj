@@ -1,145 +1,24 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="DataTransferObjects\Admin\Profiles\**" />
-    <Compile Remove="DataTransferObjects\Brand\**" />
-    <Compile Remove="DataTransferObjects\Carrier\**" />
-    <Compile Remove="DataTransferObjects\Category\Profiles\**" />
-    <Compile Remove="DataTransferObjects\DiscountCoupon\**" />
-    <Compile Remove="DataTransferObjects\Manufacturer\**" />
-    <Compile Remove="DataTransferObjects\Order\**" />
-    <Compile Remove="DataTransferObjects\Product\Profiles\**" />
-    <Compile Remove="DataTransferObjects\System\**" />
-    <Compile Remove="DataTransferObjects\User\**" />
-    <Compile Remove="DataTransferObjects\Xml\**" />
-    <Compile Remove="Helpers\Brand\**" />
-    <Compile Remove="Helpers\Carrier\**" />
-    <Compile Remove="Helpers\Category\**" />
-    <Compile Remove="Helpers\DiscountCoupon\**" />
-    <Compile Remove="Helpers\Manufacturer\**" />
-    <Compile Remove="Helpers\Order\**" />
-    <Compile Remove="Helpers\Product\**" />
-    <Compile Remove="Helpers\System\**" />
-    <Compile Remove="Helpers\Trendyol\**" />
-    <Compile Remove="Helpers\User\**" />
-    <Compile Remove="Helpers\Xml\**" />
-    <Compile Remove="Interfaces\Managers\**" />
-    <Compile Remove="Managers\**" />
-    <Compile Remove="Utilities\**" />
-    <Compile Remove="Validators\Admin\**" />
-    <Compile Remove="Validators\Brand\**" />
-    <Compile Remove="Validators\Carrier\**" />
-    <Compile Remove="Validators\Category\**" />
-    <Compile Remove="Validators\DiscountCoupon\**" />
-    <Compile Remove="Validators\Manufacturer\**" />
-    <Compile Remove="Validators\Order\**" />
-    <Compile Remove="Validators\System\**" />
-    <Compile Remove="Validators\Trendyol\**" />
-    <Compile Remove="Validators\User\**" />
-    <Compile Remove="Validators\Xml\**" />
-    <EmbeddedResource Remove="DataTransferObjects\Admin\Profiles\**" />
-    <EmbeddedResource Remove="DataTransferObjects\Brand\**" />
-    <EmbeddedResource Remove="DataTransferObjects\Carrier\**" />
-    <EmbeddedResource Remove="DataTransferObjects\Category\Profiles\**" />
-    <EmbeddedResource Remove="DataTransferObjects\DiscountCoupon\**" />
-    <EmbeddedResource Remove="DataTransferObjects\Manufacturer\**" />
-    <EmbeddedResource Remove="DataTransferObjects\Order\**" />
-    <EmbeddedResource Remove="DataTransferObjects\Product\Profiles\**" />
-    <EmbeddedResource Remove="DataTransferObjects\System\**" />
-    <EmbeddedResource Remove="DataTransferObjects\User\**" />
-    <EmbeddedResource Remove="DataTransferObjects\Xml\**" />
-    <EmbeddedResource Remove="Helpers\Brand\**" />
-    <EmbeddedResource Remove="Helpers\Carrier\**" />
-    <EmbeddedResource Remove="Helpers\Category\**" />
-    <EmbeddedResource Remove="Helpers\DiscountCoupon\**" />
-    <EmbeddedResource Remove="Helpers\Manufacturer\**" />
-    <EmbeddedResource Remove="Helpers\Order\**" />
-    <EmbeddedResource Remove="Helpers\Product\**" />
-    <EmbeddedResource Remove="Helpers\System\**" />
-    <EmbeddedResource Remove="Helpers\Trendyol\**" />
-    <EmbeddedResource Remove="Helpers\User\**" />
-    <EmbeddedResource Remove="Helpers\Xml\**" />
-    <EmbeddedResource Remove="Interfaces\Managers\**" />
-    <EmbeddedResource Remove="Managers\**" />
-    <EmbeddedResource Remove="Utilities\**" />
-    <EmbeddedResource Remove="Validators\Admin\**" />
-    <EmbeddedResource Remove="Validators\Brand\**" />
-    <EmbeddedResource Remove="Validators\Carrier\**" />
-    <EmbeddedResource Remove="Validators\Category\**" />
-    <EmbeddedResource Remove="Validators\DiscountCoupon\**" />
-    <EmbeddedResource Remove="Validators\Manufacturer\**" />
-    <EmbeddedResource Remove="Validators\Order\**" />
-    <EmbeddedResource Remove="Validators\System\**" />
-    <EmbeddedResource Remove="Validators\Trendyol\**" />
-    <EmbeddedResource Remove="Validators\User\**" />
-    <EmbeddedResource Remove="Validators\Xml\**" />
-    <None Remove="DataTransferObjects\Admin\Profiles\**" />
-    <None Remove="DataTransferObjects\Brand\**" />
-    <None Remove="DataTransferObjects\Carrier\**" />
-    <None Remove="DataTransferObjects\Category\Profiles\**" />
-    <None Remove="DataTransferObjects\DiscountCoupon\**" />
-    <None Remove="DataTransferObjects\Manufacturer\**" />
-    <None Remove="DataTransferObjects\Order\**" />
-    <None Remove="DataTransferObjects\Product\Profiles\**" />
-    <None Remove="DataTransferObjects\System\**" />
-    <None Remove="DataTransferObjects\User\**" />
-    <None Remove="DataTransferObjects\Xml\**" />
-    <None Remove="Helpers\Brand\**" />
-    <None Remove="Helpers\Carrier\**" />
-    <None Remove="Helpers\Category\**" />
-    <None Remove="Helpers\DiscountCoupon\**" />
-    <None Remove="Helpers\Manufacturer\**" />
-    <None Remove="Helpers\Order\**" />
-    <None Remove="Helpers\Product\**" />
-    <None Remove="Helpers\System\**" />
-    <None Remove="Helpers\Trendyol\**" />
-    <None Remove="Helpers\User\**" />
-    <None Remove="Helpers\Xml\**" />
-    <None Remove="Interfaces\Managers\**" />
-    <None Remove="Managers\**" />
-    <None Remove="Utilities\**" />
-    <None Remove="Validators\Admin\**" />
-    <None Remove="Validators\Brand\**" />
-    <None Remove="Validators\Carrier\**" />
-    <None Remove="Validators\Category\**" />
-    <None Remove="Validators\DiscountCoupon\**" />
-    <None Remove="Validators\Manufacturer\**" />
-    <None Remove="Validators\Order\**" />
-    <None Remove="Validators\System\**" />
-    <None Remove="Validators\Trendyol\**" />
-    <None Remove="Validators\User\**" />
-    <None Remove="Validators\Xml\**" />
+    <PackageReference Include="FluentValidation" Version="12.2.0" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.2.0" />
+    <PackageReference Include="Mapster" Version="10.0.14" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.14" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="10.0.14" />
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.19.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Autofac" Version="8.2.0" />
-    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
-    <PackageReference Include="Autofac.Extras.DynamicProxy" Version="7.1.0" />
-    <PackageReference Include="AutoMapper" Version="13.0.1" />
-    <PackageReference Include="FluentValidation" Version="11.11.0" />
-    <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EditorConfigFiles Remove="C:\Users\talip\source\repos\ECommerce\ECommerce.Application\DataTransferObjects\Trendyol\.editorconfig" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\clients\Hepsiburada.Client\Hepsiburada.Client.csproj" />
-    <ProjectReference Include="..\..\clients\N11.Client\N11.Client.csproj" />
-    <ProjectReference Include="..\..\clients\Trendyol.Client\Trendyol.Client.csproj" />
-    <ProjectReference Include="..\Ecommerce.Core\ECommerce.Core.csproj" />
+    <ProjectReference Include="..\..\marketplaces\Trendyol.Client\Trendyol.Client.csproj" />
+    <ProjectReference Include="..\ECommerce.Core\ECommerce.Core.csproj" />
     <ProjectReference Include="..\ECommerce.Domain\ECommerce.Domain.csproj" />
-    <ProjectReference Include="..\ECommerce.EntityFramework\ECommerce.EntityFramework.csproj" />
   </ItemGroup>
 
 </Project>

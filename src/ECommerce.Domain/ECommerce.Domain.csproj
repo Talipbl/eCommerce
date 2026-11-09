@@ -1,71 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Constants\Admin\**" />
-    <Compile Remove="Constants\Brand\**" />
-    <Compile Remove="Constants\Carrier\**" />
-    <Compile Remove="Constants\Category\**" />
-    <Compile Remove="Constants\DiscountCoupon\**" />
-    <Compile Remove="Constants\Manufacturer\**" />
-    <Compile Remove="Constants\Order\**" />
-    <Compile Remove="Constants\Product\**" />
-    <Compile Remove="Constants\System\**" />
-    <Compile Remove="Constants\Trendyol\**" />
-    <Compile Remove="Constants\User\**" />
-    <Compile Remove="Constants\Xml\**" />
-    <Compile Remove="Domains\Product\Configurations\**" />
-    <Compile Remove="Repositories\Trendyol\**" />
-    <EmbeddedResource Remove="Constants\Admin\**" />
-    <EmbeddedResource Remove="Constants\Brand\**" />
-    <EmbeddedResource Remove="Constants\Carrier\**" />
-    <EmbeddedResource Remove="Constants\Category\**" />
-    <EmbeddedResource Remove="Constants\DiscountCoupon\**" />
-    <EmbeddedResource Remove="Constants\Manufacturer\**" />
-    <EmbeddedResource Remove="Constants\Order\**" />
-    <EmbeddedResource Remove="Constants\Product\**" />
-    <EmbeddedResource Remove="Constants\System\**" />
-    <EmbeddedResource Remove="Constants\Trendyol\**" />
-    <EmbeddedResource Remove="Constants\User\**" />
-    <EmbeddedResource Remove="Constants\Xml\**" />
-    <EmbeddedResource Remove="Domains\Product\Configurations\**" />
-    <EmbeddedResource Remove="Repositories\Trendyol\**" />
-    <None Remove="Constants\Admin\**" />
-    <None Remove="Constants\Brand\**" />
-    <None Remove="Constants\Carrier\**" />
-    <None Remove="Constants\Category\**" />
-    <None Remove="Constants\DiscountCoupon\**" />
-    <None Remove="Constants\Manufacturer\**" />
-    <None Remove="Constants\Order\**" />
-    <None Remove="Constants\Product\**" />
-    <None Remove="Constants\System\**" />
-    <None Remove="Constants\Trendyol\**" />
-    <None Remove="Constants\User\**" />
-    <None Remove="Constants\Xml\**" />
-    <None Remove="Domains\Product\Configurations\**" />
-    <None Remove="Repositories\Trendyol\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Domains\Admin\Configurations\" />
-    <Folder Include="Domains\Brand\Configurations\" />
-    <Folder Include="Domains\Carrier\Configurations\" />
-    <Folder Include="Domains\Category\Configurations\" />
-    <Folder Include="Domains\DiscountCoupon\Configurations\" />
-    <Folder Include="Domains\Manufacturer\Configurations\" />
-    <Folder Include="Domains\Order\Configurations\" />
-    <Folder Include="Domains\Systems\Configurations\" />
-    <Folder Include="Domains\User\Configurations\" />
-    <Folder Include="Domains\Xml\Configurations\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Ecommerce.Core\ECommerce.Core.csproj" />
+    <ProjectReference Include="..\ECommerce.Core\ECommerce.Core.csproj" />
   </ItemGroup>
 
 </Project>

@@ -2,3 +2,6 @@
 
 # CS8601: Possible null reference assignment.
 dotnet_diagnostic.CS8601.severity = suggestion
+
+# Namespace özellik klasörünü izler; Dtos/, Validators/ ve Infrastructure alt klasörleri yeni namespace açmaz (bkz. docs/CONVENTIONS.md).
+dotnet_style_namespace_match_folder = false

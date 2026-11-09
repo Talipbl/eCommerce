@@ -361,3 +361,16 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# Yerel gizli bilgiler / ortam dosyalari
+*.local.json
+appsettings.*.local.json
+.env
+.env.*
+!.env.example
+secrets.json
+
+# Yüklenen ürün görselleri (yerel geliştirme)
+src/ECommerce.API/media/
+
+# Veritabanı ve görsel yedekleri
+backups/
