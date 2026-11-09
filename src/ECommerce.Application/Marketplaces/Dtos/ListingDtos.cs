@@ -18,3 +18,16 @@ public record ListingDto(
     IReadOnlyList<ListingAttribute> ProductAttributes,
     IReadOnlyList<VariantListingAttributes> VariantAttributes,
     int? DeliveryDuration);
+
+public record ListingQuery(ListingStatus? Status, int Page = 0, int Size = 20);
+
+public record ListingSummaryDto(
+    int ProductId,
+    string ProductName,
+    string ProductCode,
+    ListingStatus Status,
+    long? ExternalContentId,
+    string? LastBatchRequestId,
+    string? StatusMessage,
+    DateTime? LastSubmittedAt,
+    DateTime? LastCheckedAt);

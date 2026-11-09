@@ -1,0 +1,66 @@
+@model IReadOnlyList<SyncStateDto>
+@{
+    ViewData["Title"] = "Senkron işleri";
+    ViewData["SyncTab"] = "jobs";
+    var now = DateTimeOffset.UtcNow;
+}
+
+<partial name="_SyncNav" />
+
+<section class="mb-4" aria-labelledby="jobs-title">
+    <h2 id="jobs-title" class="h5">Arka plan işleri</h2>
+    @if (Model.Count == 0)
+    {
+        <p class="text-body-secondary">İşler henüz hiç çalışmadı.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead><tr><th>Pazaryeri</th><th>İş</th><th>Son çalışma</th><th>İmleç</th><th>Bekleme</th><th>Son hata</th></tr></thead>
+                <tbody>
+                    @foreach (var state in Model)
+                    {
+                        var paused = state.PausedUntil > now;
+                        <tr class="@(state.LastError is not null || paused ? "table-warning" : "")">
+                            <td>@state.Marketplace</td>
+                            <td>@SyncLabels.Job(state.Job)</td>
+                            <td class="text-nowrap small">@Display.Date(state.LastRunAt)</td>
+                            <td class="text-nowrap small">@Display.Date(state.Cursor)</td>
+                            <td class="text-nowrap small">
+                                @if (paused)
+                                {
+                                    <span class="badge text-bg-warning">@Display.Date(state.PausedUntil) kadar</span>
+                                }
+                                else
+                                {
+                                    <span>—</span>
+                                }
+                            </td>
+                            <td class="small">@state.LastError</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
+
+<section aria-labelledby="run-title">
+    <h2 id="run-title" class="h5">Elle çalıştır</h2>
+    <p class="text-body-secondary small">İşler arka planda düzenli çalışır; beklemeden denemek için kullanın. Trendyol istek limiti aşılırsa bekleme süresi gösterilir.</p>
+    <div class="d-flex flex-wrap gap-2">
+        <form method="post" asp-action="Run" asp-route-job="@SyncController.OrdersJob">
+            <button type="submit" class="btn btn-outline-primary">Siparişleri içe al</button>
+        </form>
+        <form method="post" asp-action="Run" asp-route-job="@SyncController.InventoryJob">
+            <button type="submit" class="btn btn-outline-primary">Fiyat ve stok gönder</button>
+        </form>
+        <form method="post" asp-action="Run" asp-route-job="@SyncController.OrderStatusJob">
+            <button type="submit" class="btn btn-outline-primary">Sipariş durumlarını bildir</button>
+        </form>
+        <form method="post" asp-action="Run" asp-route-job="@SyncController.ListingsJob">
+            <button type="submit" class="btn btn-outline-primary">Ürün onay durumlarını yenile</button>
+        </form>
+    </div>
+</section>

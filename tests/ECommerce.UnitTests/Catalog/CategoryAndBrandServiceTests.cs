@@ -23,6 +23,16 @@ public sealed class CategoryAndBrandServiceTests : IAsyncDisposable
     }
 
     [Fact]
+    public async Task Category_is_returned_with_description_for_editing()
+    {
+        var service = _db.CategoryService();
+        var created = (await service.CreateAsync(new SaveCategoryRequest("Giyim", null, null, "Tüm giyim ürünleri", 3, true), Ct)).Value!;
+
+        (await service.GetAsync(created.Id, Ct)).Value.ShouldBe(created);
+        (await service.GetAsync(999, Ct)).Error!.Kind.ShouldBe(ErrorKind.NotFound);
+    }
+
+    [Fact]
     public async Task Unknown_parent_is_rejected()
     {
         var result = await _db.CategoryService().CreateAsync(new SaveCategoryRequest("Tişört", null, 999, null, 0, true), Ct);

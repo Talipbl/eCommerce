@@ -180,6 +180,7 @@ public sealed class OrderServiceTests : IAsyncLifetime
         var shipped = (await Management.ShipAsync(order.Id, new ShipOrderRequest(null, null, "GIB2026000000001"), Ct)).Value!;
 
         shipped.TrackingNumber.ShouldBe("7330000000001");
+        shipped.InvoiceNumber.ShouldBe("GIB2026000000001");
         var updates = await _db.Context.MarketplaceOrderStatusUpdates.OrderBy(u => u.Id).ToListAsync(Ct);
         updates.Select(u => u.Action).ShouldBe([MarketplaceOrderAction.Picking, MarketplaceOrderAction.Invoiced]);
         updates.ShouldAllBe(u => u.OrderId == order.Id && u.ExternalReference == "3330000001" && u.Status == OutboxStatus.Pending);

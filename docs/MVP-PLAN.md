@@ -11,7 +11,7 @@
 3. İkisinin entegrasyonu: tek ürün kataloğu, tek stok, tüm kanalların siparişleri tek yerde.
 
 **Mimari kararlar**
-- Back-end ve front-end ayrı projeler. Back-end bir **ASP.NET Core Web API**; front-end (React veya Vue) **en son** yapılır.
+- Back-end ve front-end ayrı projeler. Back-end bir **ASP.NET Core Web API**; iki UI (MVC yönetim paneli, React vitrin) **en son** yapılır ve yalnızca API üzerinden çalışır (bkz. Faz 6).
 - SaaS değil. Tek satıcı olduğu için kiracı (tenant) modeli yok; Trendyol bilgileri konfigürasyonda/secret'ta tutulur.
 - Back-end operasyonları **TDD** ile geliştirilir (bkz. "TDD yaklaşımı").
 - Yayın **Docker** ile yapılır.
@@ -35,7 +35,8 @@ tests/
   ECommerce.UnitTests
   ECommerce.IntegrationTests ← WebApplicationFactory + Testcontainers
   Trendyol.Client.Tests      ← WireMock ile sözleşme testleri
-frontend/                    ← Faz 6
+src/ECommerce.AdminPanel     ← Faz 6: MVC yönetim paneli (solution'da)
+frontend/storefront          ← Faz 6: React + Next.js vitrin (solution dışında, kendi package.json'ı)
 docker/                      ← Faz 5: Caddyfile, yedekleme betikleri
 ```
 
@@ -282,13 +283,108 @@ dotnet user-secrets set "Cors:AllowedOrigins:0" "http://localhost:5173"
 
 ---
 
-## Faz 6 — Front-end (React veya Vue) (kapsama göre 15–25 gün)
+## Faz 6 — Front-end: MVC yönetim paneli + React vitrin (kapsama göre 15–25 gün)
 
-- [ ] Ayrı repo veya `frontend/` klasörü; Vite + TypeScript.
-- [ ] API client'ı OpenAPI'den otomatik üretilir.
-- [ ] **Yönetim paneli:** giriş, dashboard, katalog, siparişler (tüm kanallar), Trendyol yayın/eşleştirme ekranları, senkron logu.
-- [ ] **Vitrin:** ürün listeleme/detay, sepet, ödeme, müşteri hesabı.
-- [ ] Docker image'ı ve compose'a eklenmesi.
+**Yapı kuralları**
+- `ECommerce.sln` yalnızca .NET projelerini içerir. Vitrin aynı repoda `frontend/storefront/` altında durur; `.esproj` ile solution'a **eklenmez** (CI'daki `dotnet build ECommerce.sln` Node'a bağımlı kalmasın, frontend hatası backend PR'ını kırmasın). Gerekirse solution'a yalnızca "Solution Folder" olarak eklenir.
+- İki UI de yalnızca API'yi çağırır; Application/Persistence'a doğrudan referans vermez. Yetki, validation ve medya tek yerde (API) kalır.
+- Yerelde hepsini birlikte açmak için isteğe bağlı bir Aspire AppHost (`AddNextJsApp`) eklenebilir; derlemeye karışmaz.
+
+### 6.1 Yönetim paneli (`src/ECommerce.AdminPanel`, ASP.NET Core MVC) — 9–12 gün
+
+**Teknik kararlar**
+- Razor view + Bootstrap 5; statik dosyalar projede (`wwwroot/lib`, LibMan), CDN ve Node build adımı yok. Etkileşim için az miktarda vanilla JS (görsel sıralama, Trendyol kategori/marka arama kutuları).
+- Panel kendi güvenlik başlıklarını basar: sıkı CSP (`script-src 'self'`), `X-Frame-Options: DENY`, HSTS. Tüm POST formlarında global `AutoValidateAntiforgeryToken`.
+- Testler `tests/ECommerce.AdminPanel.Tests`: unit (token handler, ProblemDetails eşleme) + panelin `WebApplicationFactory`'si; API, HttpClient'ların primary handler'ı yerine konan `FakeApi` ile taklit edilir (ağ ve ek paket yok). HTML doğrulaması AngleSharp ile. TDD kuralı panel altyapısı için geçerli; düz CRUD view'ları için uçtan uca birkaç akış testi yeterli.
+
+**6.1.1 API client'ı (OpenAPI'den üretim)**
+- [x] API'ye `Microsoft.Extensions.ApiDescription.Server`: derlemede `src/ECommerce.API/openapi/ecommerce-api.json` (OpenAPI 3.0) üretilir ve repoya commit'lenir. Üretim sırasında zorunlu ayarlar yer tutucuyla doldurulur, arka plan işleri çalışmaz; Docker publish'te üretim kapalı.
+- [x] Doküman düzeltmeleri: enum'lar `type: string`, sayılar yalnızca sayı (OpenAPI MVC'nin değil HTTP JSON ayarlarını okuyordu), `operationId` = `{Controller}_{Action}`.
+- [x] Panelde NSwag (`OpenApiReference`, System.Text.Json) ile controller başına client (`OrdersClient.ListAsync` ...) derlemede üretilir; yönetici client'ları `IHttpClientFactory` ile typed client olarak kaydedilir. Taban adres `Api:BaseUrl` (yayında `http://api:8080`), eksikse panel açılmıyor. Solution'da panel API'den sonra derlenir.
+- [x] CI'da "doküman güncel mi" kontrolü: build sonrası `src/ECommerce.API/openapi/` değiştiyse job kırılır.
+- [x] `ProblemDetails` → `ModelState` (`AddApiProblem`): alan hataları ilgili form alanına, diğerleri özet hataya; 409 → "sayfayı yenileyin"; pazaryeri hataları `upstreamStatus` ve `Retry-After` ile. 404 sayfası panelin kendi hata görünümü.
+- [x] İskelet: Bootstrap 5 layout, `tr-TR` hata sayfaları, CSP (`script-src 'self'`, inline yok; görseller için `Media:PublicBaseUrl`), global antiforgery, `/health/live`. `tests/ECommerce.AdminPanel.Tests`: 18 test.
+
+**6.1.2 Oturum (BFF)**
+- [x] Giriş formu → `POST /api/v1/auth/login` (`ApiAuthClient`, üretilen client değil). Access token gövdeden, refresh token `Set-Cookie: ecommerce_refresh`'ten okunur; yenileme ve çıkışta `Cookie` başlığıyla elle gönderilir. Tüm API client'larında cookie container kapalı (`UseCookies = false`): havuzdaki handler'lar oturumlar arasında paylaşılıyor.
+- [x] Panel cookie'si (`admin_session`, `httpOnly`, `Secure`, `SameSite=Strict`, 8 saat kayan süre) yalnızca oturum anahtarını taşır. Token'lar `AdminSessionStore`'da (`IMemoryCache`, 8 saat kayan süre); sunucuda oturumu olmayan cookie reddedilir. Panel yeniden başlarsa yönetici tekrar giriş yapar. Giriş, statik dosyalar, hata sayfası ve `/health/live` dışındaki her uç oturum ister.
+- [x] Data Protection anahtarları `DataProtection:KeysPath` ayarlıysa oraya yazılır (yayında `/app/keys` volume'ü).
+- [x] `ApiTokenHandler`: her isteğe Bearer ekler; token'ın bitmesine 60 sn'den az kaldıysa önce yeniler; 401 gelirse bir kez yenileyip aynı gövdeyle tekrar dener; yenileme reddedilirse oturum silinir, `SessionExpiredFilter` panel cookie'sini silip girişe yönlendirir (GET'te kalınan sayfaya geri döner).
+- [x] **Yenileme oturum başına kilitli** (`SemaphoreSlim`): API döndürülmüş refresh token'ın tekrar kullanımını çalınma sayıp tüm oturumları kapatıyor. Kilidi alan istek token hâlâ eskiyse yeniler, diğerleri yeni token'ı kullanır; yenileme çağrısı istek iptal edilse de tamamlanır (yeni refresh token kaybolmasın). Testi: aynı süresi dolmuş token'la 5 paralel istek → API'ye tek yenileme.
+- [x] Çıkış: `POST /auth/logout` (refresh cookie'siyle; API'ye ulaşılamazsa yalnızca yerel oturum kapanır) + yerel oturumun silinmesi. Parola değiştirme: başarılı olunca panel de çıkış yapar ve giriş sayfasında bilgi mesajı gösterir; API'nin alan hataları ilgili alanın altına düşer.
+- [x] Rate limit: panel API'ye `X-Forwarded-For` ile gerçek istemci IP'sini iletir (tarayıcıdan gelen değer kullanılmaz). API bunu compose'daki `ASPNETCORE_FORWARDEDHEADERS_ENABLED` ile okuyor; panelin de Caddy arkasında gerçek IP'yi görmesi için aynı ayar gerekir (6.3).
+- [x] Bulunan hata: üretilen client tanımlı hata cevaplarında (400 ProblemDetails, 404...) gövdeyi saklamıyordu, alan hataları forma düşmezdi. Kayıtlı client'larda `ReadResponseAsString` açıldı (`ApiClientDefaults.cs`), testi var. Türkçe karakterler HTML'de kodlanmasın diye `WebEncoders` tüm Unicode aralığına açıldı.
+- [x] `tests/ECommerce.AdminPanel.Tests`: 51 test (oturum kilidi, token handler, auth client, forwarded header, giriş/çıkış/parola akışları).
+
+**6.1.3 API'deki eksikler (TDD, panelden önce)**
+- [x] `GET /api/v1/dashboard/summary` (`Application/Dashboard`): duruma göre sipariş sayıları (sıfır olanlar dahil), onay bekleyen havaleler, bugün / son 7 gün ciro (iptaller hariç, kanal bazında; gün sınırı `Dashboard:TimeZone`, varsayılan `Europe/Istanbul`), stoğu eşik ve altındaki aktif varyantlar (`Dashboard:LowStockThreshold`, varsayılan 5; en fazla `LowStockListSize` = 20 satır + toplam sayı), hatalı outbox sayıları (Inventory / OrderStatus), hatası olan veya beklemedeki senkron işleri. Geçersiz saat dilimi API'yi açılışta durdurur.
+- [x] `GET /api/v1/marketplaces/trendyol/listings?status=&page=&size=`: ürün adı ve koduyla Trendyol yayınları, son gönderilen önce.
+- [x] Testler: unit (InMemory) + SQL Server'da sorgu çevirisi için entegrasyon testi (`DashboardEndpointsTests`; yerelde Docker kapalıyken atlanır, CI'da çalışır). Panelde `DashboardClient` kaydedildi.
+- [ ] (Opsiyonel) Yönetici için müşteri listesi/detayı (`/api/v1/customers`); sipariş detayından müşteriye geçiş için. MVP'de yoksa sipariş detayındaki müşteri bilgisi yeterli.
+
+**Katalog ekranları (6.1.5 adım 4) — tamamlandı**
+- [x] Markalar (liste, arama, ekle/düzenle/sil), kategoriler (girintili ağaç, alt kategori ekle, düzenle/taşı/sil; düzenlemede kategorinin kendisi ve alt kategorileri üst kategori listesinde yok), ürünler (filtreli ve sayfalı liste; oluşturma ilk varyantla; detayda bilgi, yayınla/kaldır, sil, varyant ekle/güncelle/sil, görsel yükle/sil/sırala).
+- [x] Görsel sırası sürükle-bırak (`site.js`) veya JavaScript'siz ok düğmeleriyle; silme gibi geri alınamaz işlemler `data-confirm` ile onay ister (CSP'de satır içi script yok).
+- [x] Fiyat girişleri kültürden bağımsız (istekler invariant kültürle işlenir, `1499.90`); gösterim `Display` ile tr-TR ve Europe/Istanbul (`₺1.499,90`). Varyant özellikleri satır başına `Ad: Değer`.
+- [x] API'nin 409 cevabı panelde aynen gösterilir (iş kuralı da olabiliyor: "Alt kategorisi olan kategori silinemez."); 6.1.1'deki "sayfayı yenileyin" eşlemesi kaldırıldı.
+- [x] API doküman düzeltmeleri: `IActionResult` dönen 39 uç `ActionResult<T>`'ye geçti (client'ta `GetAsync` gibi metotlar gövdesiz `Task` dönüyordu), silmeler 204, sayaç cevapları tipli, multipart dosya alanı `string/binary`, para alanları `decimal` (önceden `double` üretiliyordu), `GET /catalog/categories/{id}` eklendi. `OpenApiDocumentTests` bunları koruyor.
+- Doğrulanmadı: ekranlar gerçek API'ye karşı tarayıcıda denenmedi (Docker kapalı); testler sahte API ile.
+
+**Sipariş ekranları (6.1.5 adım 5) — tamamlandı**
+- [x] Tek liste (durum, kanal, arama: sipariş no / müşteri adı / e-posta; sayfalı), tarihler Europe/Istanbul. Detay: kalemler (ürüne link), tutarlar, müşteri ve adres, ödeme ve kargo bilgisi, durum geçmişi.
+- [x] Duruma göre aksiyonlar: ödeme onayı (havalede açıklama hatırlatması), hazırla, kargoya ver (site: kargo + takip no; Trendyol: fatura no, kargo boşsa içe alınan değer kalır), teslim, iptal (sebep zorunlu). API'nin iş kuralı hataları ilgili formda gösterilir.
+- [x] Trendyol siparişinde iptal düğmesi yok: API yerel iptali Trendyol'a bildirmiyor (outbox yalnızca Picking/Invoiced). İptal Trendyol panelinden yapılır, senkronla yansır. **Açık karar:** API'nin pazaryeri siparişinin panelden iptalini reddetmesi gerekip gerekmediği.
+- [x] Bulunan hata: veritabanından okunan tarihler `Kind=Unspecified` geliyordu, API "Z" eki olmadan yazıyordu; client'lar yerel saat sanıyordu (geliştirme makinesinde 3 saat kayma). Tüm `DateTime` alanlarına okumada UTC dönüştürücüsü (`UtcDateTimeConverter`, migration gerekmedi). `OrderDto`'ya `InvoiceNumber` eklendi.
+
+**Trendyol ekranları (6.1.5 adım 6) — tamamlandı**
+- [x] Marka ve kategori eşleme: yerel liste + eşlenme durumu; Trendyol'da arama (marka adıyla / kategori adıyla ön dolu, kategori sonuçlarında tam yol) ve sonuçtan seçim. Kategori eşlenince özellik sayfasına geçilir.
+- [x] Özellik eşleme: zorunlu, varyant belirleyen ve zaten eşlenmiş özellikler her zaman; isteğe bağlılar "tümünü göster" ile (API eşlemeyi topluca değiştirdiği için eşli bir özellik hiç gizlenmez). Satır başına sabit değer veya yerel varyant özelliği + değer eşlemeleri. Trendyol değeri adıyla yazılır (özellik başına bir `<datalist>`), sunucuda Türkçe büyük/küçük harf duyarsız değer numarasına çevrilir; listede yoksa serbest değer kabul eden özellikte serbest değer olur, etmeyende alan hatası. Değer listeleri yalnızca gösterilen özellikler için çekilir.
+- [x] Yayınlar: duruma göre liste, red/hata sebebi, batch sonuç sayfası (hatalı barkodlar ve sebepler, 4 saat sonra "süresi doldu" uyarısı), "Durumları Trendyol'dan yenile". Ürün detayında Trendyol bölümü: durum, mesaj, "Trendyol'a gönder / yeniden gönder" (kargoya veriliş süresi isteğe bağlı); işlemde veya kabul edilmiş üründe düğme yok.
+
+**6.1.4 Ekranlar ve kullandıkları uçlar**
+
+| Ekran | İçerik | API |
+|---|---|---|
+| Giriş / Parola | giriş, çıkış, parola değiştir, kilitli hesap ve 429 mesajları | `auth/*` |
+| Dashboard | sipariş özetleri, ödeme bekleyenler, düşük stok, senkron uyarıları (ilgili listeye link) | `dashboard/summary` |
+| Kategoriler | ağaç görünümü, ekle/düzenle/taşı/sil (döngü ve dolu kategori hataları formda) | `catalog/categories` |
+| Markalar | liste, ekle/düzenle/sil | `catalog/brands` |
+| Ürünler | liste (arama, kategori, marka, aktiflik, sayfalama); detay/düzenle; varyantlar (barkod, stok kodu, fiyat, stok, özellikler); görseller (yükle, sürükle-bırak sıralama, sil; en fazla 8); yayınla/yayından kaldır | `catalog/products/*` |
+| Siparişler | tek liste (durum, kanal, arama); detay: kalemler, adres, ödeme, durum geçmişi; duruma göre görünen aksiyonlar: ödeme onayı, hazırla, kargoya ver (firma, takip no, Trendyol için fatura no), teslim, iptal (sebep) | `orders/*` |
+| Trendyol — Eşleştirme | kategori eşleme (leaf kategori arama kutusu), özellik eşleme (zorunlu özellikler işaretli, değer listesi veya serbest değer), marka eşleme (arama kutusu) | `mappings/*`, `categories/search`, `categories/{id}/attributes`, `.../values`, `brands` |
+| Trendyol — Yayınlar | durum filtresiyle liste, ürün detayında "Trendyol'a gönder", red/hata sebepleri, batch sonucu | `listings/*`, `batches/*` |
+| Senkron | iş durumları (imleç, bekleme, son hata), log (pazaryeri/işlem/sonuç filtresi), outbox (Inventory / OrderStatus) + tekil ve toplu tekrar deneme, elle tetikleme butonları | `marketplaces/sync/*`, `trendyol/sync/*` |
+
+- Trendyol sipariş paketleri ekranı (`orders/packages`) panele eklenmez: Trendyol siparişleri içe alınıp yerel sipariş akışıyla yönetiliyor, statü geri bildirimi otomatik.
+- Para birimi ve tarih biçimi `tr-TR`; tarihler UTC'den `Europe/Istanbul`'a çevrilerek gösterilir.
+
+**6.1.5 Uygulama sırası**
+1. İskelet + layout + güvenlik başlıkları + client üretimi (1–2 gün)
+2. BFF oturumu ve token handler, testleriyle (2 gün)
+3. API eksikleri: dashboard ve yayın listesi (1–1,5 gün)
+4. Katalog ekranları, görsel yükleme dahil (2–3 gün)
+5. Sipariş ekranları (1–1,5 gün)
+6. Trendyol eşleştirme + yayın ekranları (1,5–2 gün)
+7. Senkron ekranı + dashboard (1 gün)
+
+Durum: 1–7 tamamlandı. Senkron ekranı: iş durumları (imleç, bekleme, son hata; sorunlu satır vurgulu), filtreli log, outbox (fiyat-stok / sipariş durumu) tekil ve toplu tekrar deneme, dört işin elle tetiklenmesi (limit aşımında bekleme süresi gösterilir). Dashboard: onay bekleyen havale, hazırlanacak/kargolanacak, bugün ve son 7 gün ciro (kanal bazında), düşük stok, senkron uyarıları; her kart ilgili listeye gider, özet alınamazsa sayfa hata mesajıyla açılır. Panel testleri: 119.
+
+**Kabul durumu (2026-11-09, yerel prova):** API + panel LocalDB üzerinde çalıştırıldı (Trendyol erişilemeyen adrese yönlendirildi). Panel üzerinden giriş, kategori/marka/ürün, iki varyant, görsel yükleme ve sıralama, yayınlama; API'den havaleli site siparişi → ödeme onayı → hazırla → kargo → teslim; düşük stok dashboard'da; Trendyol hataları (erişilemiyor, eşleme yok) ekranda; senkron log/outbox; çıkış ve panel yeniden başlayınca tekrar giriş denendi, tarayıcıda yalnızca `admin_session` ve `admin_csrf` cookie'leri var. Gerçek Trendyol hesabıyla deneme yapılmadı.
+- Provada bulunan: dashboard düşük stok sorgusu SQL'e çevrilemiyordu (InMemory testleri yakalamıyor, entegrasyon testi Docker yokken atlanıyordu); ürün sayfasında yeni varyant hatası üstteki bilgi formunda görünüyordu.
+- Entegrasyon testleri Docker olmadan da çalışır: `ECOMMERCE_TEST_SQLSERVER` (ör. `Server=(localdb)\MSSQLLocalDB;Database=ECommerceIntegrationTests;Trusted_Connection=True;TrustServerCertificate=True`) verilirse o sunucuda veritabanı silinip yeniden oluşturulur. 49/49 geçti.
+
+**Kabul:** Yönetici panelden giriş yapıp ürün oluşturuyor, görsel yüklüyor, yayınlıyor; ürünü Trendyol eşlemeleriyle gönderip batch sonucunu görüyor; site ve Trendyol siparişlerini tek listede ilerletiyor; hatalı outbox kaydını tekrar deniyor. Tarayıcıda hiçbir API token'ı yok (cookie'ler ve `localStorage` kontrol edilir); access token süresi dolunca oturum kesintisiz devam ediyor; paralel isteklerde yönetici atılmıyor.
+
+### 6.2 Vitrin (`frontend/storefront`, React + Next.js + TypeScript)
+- [ ] SEO için SSR yalnızca herkese açık katalog sayfalarında (`/store`): ürün listeleme/detay, kategori; meta ve Open Graph etiketleri.
+- [ ] Sepet, ödeme ve müşteri hesabı tarayıcıda çalışır; mevcut access token + httpOnly refresh cookie akışı kullanılır (API'de değişiklik gerekmez).
+- [ ] API client'ı OpenAPI'den üretilir. Sunucu tarafı istekler iç ağdan (`http://api:8080`) gider.
+- [ ] `next.config.ts`'de `output: "standalone"`.
+
+### 6.3 CI ve yayın
+- [ ] CI: mevcut .NET job'ı aynen kalır (AdminPanel ve testleri solution'da olduğu için oraya dahil); `frontend/**` path filtresiyle ayrı Node job'ı (lint, build). Docker matrisine `ecommerce-admin` ve `ecommerce-storefront` eklenir.
+- [ ] Compose + Caddy: `alanadi.com` → storefront, `alanadi.com/api/*` ve `/media/*` → api, `admin.alanadi.com` → AdminPanel. Vitrin ile API aynı origin'de olduğu için CORS gerekmez ve `SameSite=Strict` refresh cookie'si sorunsuz çalışır.
+- [ ] `admin` servisi: `Api__BaseUrl=http://api:8080`, `ASPNETCORE_FORWARDEDHEADERS_ENABLED=true` (**zorunlu**: Caddy TLS'i sonlandırıyor; bu olmadan panel isteği HTTP sanar, `Secure=Always` antiforgery cookie'si yüzünden giriş sayfası 500 verir — yerel provada görüldü; ayrıca giriş limiti için gerçek istemci IP'si), `DataProtection__KeysPath=/app/keys` + `admin-keys` volume'ü, `/health/live` health check. Panel API'yi iç ağdan çağırdığı için CORS listesine eklenmez. İsteğe bağlı: Caddy'de `admin.` alt alan adına IP kısıtı veya basic auth.
 
 ---
 
@@ -328,8 +424,7 @@ Back-end (Faz 0–5): yaklaşık **7–9 hafta**. Front-end dahil: **10–14 haf
 
 ## Açık kararlar
 
-1. **React mı Vue mu?** Faz 6'ya kadar gerekmiyor. Yönetim paneli ve vitrin tek uygulama mı, iki ayrı uygulama mı olacak? (Vitrin için SEO önemliyse Next.js/Nuxt gibi SSR değerlendirilir.)
-2. **Yayın hedefi:** VPS (Hetzner/DigitalOcean vb.) varsayıldı.
+1. **Yayın hedefi:** VPS (Hetzner/DigitalOcean vb.) varsayıldı.
 
 ## Alınan kararlar
 
@@ -345,3 +440,4 @@ Back-end (Faz 0–5): yaklaşık **7–9 hafta**. Front-end dahil: **10–14 haf
 | 2026-11-07 | Yayın: tek VPS, Docker Compose; reverse proxy **Caddy**; gizli bilgiler `.env` (chmod 600) — Docker secrets tek sunucuda ek koruma sağlamadığı için kullanılmadı. |
 | 2026-11-07 | Migration'lar API açılışında değil, ayrı `migrator` container'ında (EF Core migration bundle). SQL Server yayında Express sürümü. |
 | 2026-11-07 | Yerel sitede sipariş için üyelik zorunlu (misafir sipariş yok). |
+| 2026-11-09 | İki ayrı UI: yönetim paneli **ASP.NET Core MVC** (`src/ECommerce.AdminPanel`, solution'da), vitrin **React + Next.js** (`frontend/storefront`, SEO için SSR; `.esproj` ile solution'a eklenmez). İkisi de yalnızca API'yi çağırır. |

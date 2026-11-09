@@ -28,6 +28,15 @@ jobs:
       - name: Build
         run: dotnet build ECommerce.sln --no-restore --configuration Release
 
+      - name: OpenAPI document is up to date
+        # Panel client'ı commit'lenmiş dokümandan üretilir; API değişip doküman güncellenmezse build kırılır.
+        run: |
+          if [ -n "$(git status --porcelain -- src/ECommerce.API/openapi/)" ]; then
+            git diff -- src/ECommerce.API/openapi/
+            echo "::error::src/ECommerce.API/openapi/ güncel değil. API'yi derleyip üretilen dokümanı commit'leyin."
+            exit 1
+          fi
+
       - name: Test
         # Canlı pazaryeri API'lerine giden testler (Category=Live) CI'da çalıştırılmaz.
         run: dotnet test --solution ECommerce.sln --no-build --configuration Release --filter-not-trait "Category=Live" --report-xunit-trx --results-directory TestResults

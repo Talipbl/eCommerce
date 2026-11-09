@@ -1,0 +1,35 @@
+@model BrandFormModel
+@{
+    var isNew = Model.Id is null;
+    ViewData["Title"] = isNew ? "Yeni marka" : "Markayı düzenle";
+}
+
+<div class="row">
+    <div class="col-12 col-md-8 col-lg-5">
+        <h1 class="h3 mb-3">@ViewData["Title"]</h1>
+
+        <form method="post" asp-action="@(isNew ? "Create" : "Edit")" asp-route-id="@Model.Id" novalidate>
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+            <div class="mb-3">
+                <label asp-for="Name" class="form-label"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="invalid-feedback d-block"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Slug" class="form-label"></label>
+                <input asp-for="Slug" class="form-control" />
+                <span asp-validation-for="Slug" class="invalid-feedback d-block"></span>
+            </div>
+
+            <div class="form-check mb-3">
+                <input asp-for="IsActive" class="form-check-input" />
+                <label asp-for="IsActive" class="form-check-label"></label>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Kaydet</button>
+            <a class="btn btn-link" asp-action="Index">Vazgeç</a>
+        </form>
+    </div>
+</div>

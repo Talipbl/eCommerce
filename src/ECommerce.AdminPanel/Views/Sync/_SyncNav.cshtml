@@ -1,0 +1,11 @@
+@{
+    var current = (string?)ViewData["SyncTab"];
+    string Active(string tab) => tab == current ? "active" : "";
+}
+<h1 class="h3 mb-3">Senkron</h1>
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item"><a class="nav-link @Active("jobs")" asp-action="Index">İşler</a></li>
+    <li class="nav-item"><a class="nav-link @Active("logs")" asp-action="Logs">Log</a></li>
+    <li class="nav-item"><a class="nav-link @Active("Inventory")" asp-action="Outbox" asp-route-kind="Inventory">Outbox: fiyat ve stok</a></li>
+    <li class="nav-item"><a class="nav-link @Active("OrderStatus")" asp-action="Outbox" asp-route-kind="OrderStatus">Outbox: sipariş durumu</a></li>
+</ul>

@@ -20,26 +20,26 @@ public class OrdersController(IOrderManagementService orders) : ControllerBase
         await orders.ListAsync(new OrderAdminQuery(status, channel, search, page, size), cancellationToken);
 
     [HttpGet("{id:int}")]
-    public async Task<IActionResult> Get(int id, CancellationToken cancellationToken) =>
-        this.ToActionResult(await orders.GetAsync(id, cancellationToken), Ok);
+    public async Task<ActionResult<OrderDto>> Get(int id, CancellationToken cancellationToken) =>
+        this.ToOk(await orders.GetAsync(id, cancellationToken));
 
     [HttpPost("{id:int}/confirm-payment")]
-    public async Task<IActionResult> ConfirmPayment(int id, CancellationToken cancellationToken) =>
-        this.ToActionResult(await orders.ConfirmPaymentAsync(id, cancellationToken), Ok);
+    public async Task<ActionResult<OrderDto>> ConfirmPayment(int id, CancellationToken cancellationToken) =>
+        this.ToOk(await orders.ConfirmPaymentAsync(id, cancellationToken));
 
     [HttpPost("{id:int}/prepare")]
-    public async Task<IActionResult> StartPreparing(int id, CancellationToken cancellationToken) =>
-        this.ToActionResult(await orders.StartPreparingAsync(id, cancellationToken), Ok);
+    public async Task<ActionResult<OrderDto>> StartPreparing(int id, CancellationToken cancellationToken) =>
+        this.ToOk(await orders.StartPreparingAsync(id, cancellationToken));
 
     [HttpPost("{id:int}/ship")]
-    public async Task<IActionResult> Ship(int id, ShipOrderRequest request, CancellationToken cancellationToken) =>
-        this.ToActionResult(await orders.ShipAsync(id, request, cancellationToken), Ok);
+    public async Task<ActionResult<OrderDto>> Ship(int id, ShipOrderRequest request, CancellationToken cancellationToken) =>
+        this.ToOk(await orders.ShipAsync(id, request, cancellationToken));
 
     [HttpPost("{id:int}/deliver")]
-    public async Task<IActionResult> Deliver(int id, CancellationToken cancellationToken) =>
-        this.ToActionResult(await orders.DeliverAsync(id, cancellationToken), Ok);
+    public async Task<ActionResult<OrderDto>> Deliver(int id, CancellationToken cancellationToken) =>
+        this.ToOk(await orders.DeliverAsync(id, cancellationToken));
 
     [HttpPost("{id:int}/cancel")]
-    public async Task<IActionResult> Cancel(int id, CancelOrderRequest request, CancellationToken cancellationToken) =>
-        this.ToActionResult(await orders.CancelAsync(id, request.Reason, cancellationToken), Ok);
+    public async Task<ActionResult<OrderDto>> Cancel(int id, CancelOrderRequest request, CancellationToken cancellationToken) =>
+        this.ToOk(await orders.CancelAsync(id, request.Reason, cancellationToken));
 }

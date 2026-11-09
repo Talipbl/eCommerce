@@ -1,0 +1,12 @@
+@{
+    var success = TempData[PanelController.SuccessKey] as string;
+    var error = TempData[PanelController.ErrorKey] as string;
+}
+@if (success is not null)
+{
+    <div class="alert alert-success" role="status">@success</div>
+}
+@if (error is not null)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}

@@ -1,0 +1,146 @@
+﻿@model DashboardPage
+@{
+    ViewData["Title"] = "Dashboard";
+    var summary = Model.Summary;
+}
+
+<h1 class="h3 mb-3">Dashboard</h1>
+
+@if (summary is null)
+{
+    <div class="alert alert-danger" role="alert">Özet alınamadı: @Model.Error</div>
+}
+else
+{
+    <div class="row g-3 mb-3">
+        <div class="col-6 col-lg-3">
+            <a class="card h-100 text-decoration-none" asp-controller="Orders" asp-action="Index" asp-route-status="PendingPayment">
+                <div class="card-body">
+                    <div class="small text-body-secondary">Onay bekleyen havale</div>
+                    <div class="fs-3 @(summary.PendingBankTransfers > 0 ? "text-warning-emphasis" : "")" data-metric="pending-transfers">@summary.PendingBankTransfers</div>
+                </div>
+            </a>
+        </div>
+        <div class="col-6 col-lg-3">
+            <a class="card h-100 text-decoration-none" asp-controller="Orders" asp-action="Index" asp-route-status="Confirmed">
+                <div class="card-body">
+                    <div class="small text-body-secondary">Hazırlanacak / kargolanacak</div>
+                    <div class="fs-3" data-metric="awaiting-action">@Model.Count(OrderStatus.Confirmed) / @Model.Count(OrderStatus.Preparing)</div>
+                </div>
+            </a>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="small text-body-secondary">Bugün ciro (@summary.Today.OrderCount sipariş)</div>
+                    <div class="fs-3" data-metric="revenue-today">@Display.Money(summary.Today.Total)</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="small text-body-secondary">Son 7 gün ciro (@summary.Last7Days.OrderCount sipariş)</div>
+                    <div class="fs-3" data-metric="revenue-7d">@Display.Money(summary.Last7Days.Total)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.FailedOutboxTotal > 0 || summary.SyncAlerts.Count > 0)
+    {
+        <section class="alert alert-warning" aria-labelledby="sync-alert-title">
+            <h2 id="sync-alert-title" class="h6">Senkron uyarıları</h2>
+            <ul class="mb-0">
+                @if (summary.FailedOutbox.Inventory > 0)
+                {
+                    <li><a asp-controller="Sync" asp-action="Outbox" asp-route-kind="Inventory" asp-route-status="Failed">@summary.FailedOutbox.Inventory hatalı fiyat/stok gönderimi</a></li>
+                }
+                @if (summary.FailedOutbox.OrderStatus > 0)
+                {
+                    <li><a asp-controller="Sync" asp-action="Outbox" asp-route-kind="OrderStatus" asp-route-status="Failed">@summary.FailedOutbox.OrderStatus hatalı sipariş durumu bildirimi</a></li>
+                }
+                @foreach (var state in summary.SyncAlerts)
+                {
+                    <li>
+                        <a asp-controller="Sync" asp-action="Index">@state.Marketplace · @SyncLabels.Job(state.Job)</a>:
+                        @if (state.PausedUntil is { } until && until > DateTimeOffset.UtcNow)
+                        {
+                            <span>@Display.Date(until) kadar beklemede.</span>
+                        }
+                        @state.LastError
+                    </li>
+                }
+            </ul>
+        </section>
+    }
+
+    <div class="row g-3">
+        <div class="col-12 col-lg-5">
+            <section class="card h-100" aria-labelledby="orders-title">
+                <div class="card-body">
+                    <h2 id="orders-title" class="h5 card-title">Siparişler</h2>
+                    <ul class="list-group list-group-flush">
+                        @foreach (var status in summary.OrdersByStatus)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <a asp-controller="Orders" asp-action="Index" asp-route-status="@status.Status">@OrderLabels.Status(status.Status)</a>
+                                <span class="badge @OrderLabels.StatusBadge(status.Status)">@Display.Number(status.Count)</span>
+                            </li>
+                        }
+                    </ul>
+
+                    <h3 class="h6 mt-3">Ciro (kanal bazında)</h3>
+                    <table class="table table-sm mb-0">
+                        <thead><tr><th>Kanal</th><th class="text-end">Bugün</th><th class="text-end">Son 7 gün</th></tr></thead>
+                        <tbody>
+                            @foreach (var channel in Enum.GetValues<OrderChannel>())
+                            {
+                                var today = summary.Today.ByChannel.FirstOrDefault(c => c.Channel == channel);
+                                var week = summary.Last7Days.ByChannel.FirstOrDefault(c => c.Channel == channel);
+                                <tr>
+                                    <td>@OrderLabels.Channel(channel)</td>
+                                    <td class="text-end text-nowrap">@Display.Money(today?.Total ?? 0)</td>
+                                    <td class="text-end text-nowrap">@Display.Money(week?.Total ?? 0)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    <p class="small text-body-secondary mb-0 mt-1">İptaller hariç; gün başlangıcı İstanbul saatine göre.</p>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-12 col-lg-7">
+            <section class="card h-100" aria-labelledby="stock-title">
+                <div class="card-body">
+                    <h2 id="stock-title" class="h5 card-title">Düşük stok <span class="text-body-secondary small">(@summary.LowStock.Threshold ve altı)</span></h2>
+                    @if (summary.LowStock.TotalCount == 0)
+                    {
+                        <p class="text-body-secondary mb-0">Stoğu azalan varyant yok.</p>
+                    }
+                    else
+                    {
+                        <table class="table table-sm align-middle mb-0">
+                            <thead><tr><th>Ürün</th><th>Stok kodu</th><th class="text-end">Stok</th></tr></thead>
+                            <tbody>
+                                @foreach (var variant in summary.LowStock.Variants)
+                                {
+                                    <tr>
+                                        <td><a asp-controller="Products" asp-action="Edit" asp-route-id="@variant.ProductId">@variant.ProductName</a></td>
+                                        <td class="small">@variant.Sku</td>
+                                        <td class="text-end"><span class="badge @(variant.StockQuantity == 0 ? "text-bg-danger" : "text-bg-warning")">@variant.StockQuantity</span></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        @if (summary.LowStock.TotalCount > summary.LowStock.Variants.Count)
+                        {
+                            <p class="small text-body-secondary mb-0 mt-1">Toplam @summary.LowStock.TotalCount varyant; en düşük @summary.LowStock.Variants.Count tanesi gösteriliyor.</p>
+                        }
+                    }
+                </div>
+            </section>
+        </div>
+    </div>
+}

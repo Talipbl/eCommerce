@@ -5,12 +5,17 @@ namespace ECommerce.API.Infrastructure;
 
 public static class ResultActionResults
 {
-    public static IActionResult ToActionResult<T>(this ControllerBase controller, Result<T> result, Func<T, IActionResult> onSuccess)
-    {
-        if (result.Succeeded)
-            return onSuccess(result.Value!);
+    /// <summary>Başarıda 200 ile değeri döner. Dönüş tipi OpenAPI dokümanına cevap şeması olarak yazılır; client'lar buna göre üretilir.</summary>
+    public static ActionResult<T> ToOk<T>(this ControllerBase controller, Result<T> result) =>
+        result.Succeeded ? controller.Ok(result.Value) : controller.ToProblem(result.Error!);
 
-        var status = result.Error!.Kind switch
+    /// <summary>200 dışı başarı cevapları (201, 202, 204) için; cevap tipi action üzerinde <see cref="ProducesResponseTypeAttribute"/> ile belirtilmeli.</summary>
+    public static IActionResult ToActionResult<T>(this ControllerBase controller, Result<T> result, Func<T, IActionResult> onSuccess) =>
+        result.Succeeded ? onSuccess(result.Value!) : controller.ToProblem(result.Error!);
+
+    private static ObjectResult ToProblem(this ControllerBase controller, AppError error)
+    {
+        var status = error.Kind switch
         {
             ErrorKind.NotFound => StatusCodes.Status404NotFound,
             ErrorKind.Conflict => StatusCodes.Status409Conflict,
@@ -18,6 +23,6 @@ public static class ResultActionResults
             _ => StatusCodes.Status400BadRequest
         };
 
-        return controller.Problem(title: result.Error.Message, statusCode: status);
+        return controller.Problem(title: error.Message, statusCode: status);
     }
 }

@@ -1,0 +1,9 @@
+@{
+    var current = (string?)ViewData["TrendyolTab"];
+    string Active(string tab) => tab == current ? "active" : "";
+}
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item"><a class="nav-link @Active("listings")" asp-controller="TrendyolListings" asp-action="Index">Yayınlar</a></li>
+    <li class="nav-item"><a class="nav-link @Active("categories")" asp-controller="TrendyolMappings" asp-action="Categories">Kategori eşleme</a></li>
+    <li class="nav-item"><a class="nav-link @Active("brands")" asp-controller="TrendyolMappings" asp-action="Brands">Marka eşleme</a></li>
+</ul>

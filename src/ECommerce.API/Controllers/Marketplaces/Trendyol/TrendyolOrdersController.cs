@@ -14,9 +14,9 @@ public class TrendyolOrdersController(ITrendyolOrderService orders) : Controller
 {
     [HttpGet]
     [ProducesResponseType<ShipmentPackagePage>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> List([FromQuery] OrderPackagesFilter filter, CancellationToken cancellationToken) =>
-        this.ToActionResult(await orders.GetPackagesAsync(new OrderPackagesQuery(
-            filter.StartDate, filter.EndDate, filter.Status, filter.OrderNumber, filter.ShipmentPackageId, filter.Page, filter.Size), cancellationToken), Ok);
+    public async Task<ActionResult<ShipmentPackagePage>> List([FromQuery] OrderPackagesFilter filter, CancellationToken cancellationToken) =>
+        this.ToOk(await orders.GetPackagesAsync(new OrderPackagesQuery(
+            filter.StartDate, filter.EndDate, filter.Status, filter.OrderNumber, filter.ShipmentPackageId, filter.Page, filter.Size), cancellationToken));
 
     [HttpPost("{packageId:long}/picking")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

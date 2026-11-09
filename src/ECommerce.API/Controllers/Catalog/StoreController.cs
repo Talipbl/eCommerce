@@ -39,6 +39,6 @@ public class StoreController(IStorefrontService storefront) : ControllerBase
         }, cancellationToken);
 
     [HttpGet("products/{slug}")]
-    public async Task<IActionResult> GetProduct(string slug, CancellationToken cancellationToken) =>
-        this.ToActionResult(await storefront.GetProductAsync(slug, cancellationToken), Ok);
+    public async Task<ActionResult<StoreProductDetail>> GetProduct(string slug, CancellationToken cancellationToken) =>
+        this.ToOk(await storefront.GetProductAsync(slug, cancellationToken));
 }

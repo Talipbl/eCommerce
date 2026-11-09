@@ -8,7 +8,7 @@ Solution klasörleri disk klasörleriyle aynıdır: `src/` (uygulama katmanları
 
 ## Application (`src/ECommerce.Application`)
 
-Özellik (feature) klasörleri: `Auth`, `Catalog`, `Customers`, `Shopping`, `Ordering`, `Marketplaces`, `Marketplaces/Trendyol`, `Common`.
+Özellik (feature) klasörleri: `Auth`, `Catalog`, `Customers`, `Shopping`, `Ordering`, `Marketplaces`, `Marketplaces/Trendyol`, `Dashboard` (birden çok özelliği okuyan yönetici özetleri), `Common`.
 
 ```
 <Özellik>/
@@ -42,6 +42,18 @@ BackgroundJobs/                          worker'lar ve AddBackgroundJobs()
 - Controller namespace'i klasörü izler (`ECommerce.API.Controllers.Shopping`).
 - Kanal (admin / vitrin / müşteri) klasörle değil route, `[Tags]` ve policy ile ayrılır. Varsayılan policy admin'dir; müşteri uçları `CustomerPolicy`, vitrin `[AllowAnonymous]` kullanır.
 - Yalnızca HTTP'ye özgü tipler (query filtreleri, `AccessTokenResponse`) API'de, kendi dosyasında durur; diğer request/response tipleri Application'dadır.
+
+## Yönetim paneli (`src/ECommerce.AdminPanel`)
+
+```
+Controllers/XxxController.cs     MVC controller'ları; view'ları Views/Xxx/ altında
+Models/XxxViewModel.cs           form ve sayfa modelleri, dosya başına bir tane
+Infrastructure/Api|Auth|Security namespace: ECommerce.AdminPanel.Infrastructure
+```
+
+- Panel yalnızca API'yi çağırır; client OpenAPI dokümanından üretilir (`ECommerce.AdminPanel.Api`). Elle yazılan istek yalnızca cookie taşıyan auth uçları içindir (`ApiAuthClient`).
+- Yeni bir client kaydedilince `ApiClientDefaults.cs`'e `Initialize` partial'ı eklenir; yoksa hata gövdesi okunmaz (test yakalar).
+- Form modeli alan adları API request alanlarıyla aynı tutulur; API hataları `ModelState.AddApiProblem` ile forma yazılır.
 
 ## Domain (`src/ECommerce.Domain`)
 

@@ -14,7 +14,7 @@ RUN dotnet restore src/ECommerce.API/ECommerce.API.csproj
 
 COPY src/ src/
 COPY marketplaces/Trendyol.Client/ marketplaces/Trendyol.Client/
-RUN dotnet publish src/ECommerce.API/ECommerce.API.csproj -c Release -o /app/publish --no-restore /p:UseAppHost=false
+RUN dotnet publish src/ECommerce.API/ECommerce.API.csproj -c Release -o /app/publish --no-restore /p:UseAppHost=false /p:OpenApiGenerateDocuments=false
 
 # Migration bundle aşaması: tüm migration'lar tek bir çalıştırılabilir dosyada
 FROM build AS migrations-build

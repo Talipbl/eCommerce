@@ -1,0 +1,71 @@
+@model OrderListPage
+@{
+    ViewData["Title"] = "Siparişler";
+    var filter = Model.Filter;
+}
+
+<h1 class="h3 mb-3">Siparişler</h1>
+
+<form method="get" asp-action="Index" class="row g-2 align-items-end mb-3" role="search">
+    <div class="col-12 col-md-5">
+        <label for="search" class="form-label small">Ara</label>
+        <input id="search" type="search" name="search" value="@filter.Search" class="form-control" placeholder="Sipariş no, müşteri adı veya e-posta" />
+    </div>
+    <div class="col-6 col-md-3">
+        <label for="status" class="form-label small">Durum</label>
+        <select id="status" name="status" class="form-select">
+            <option value="">Tümü</option>
+            @foreach (var status in Enum.GetValues<OrderStatus>())
+            {
+                <option value="@status" selected="@(filter.Status == status)">@OrderLabels.Status(status)</option>
+            }
+        </select>
+    </div>
+    <div class="col-6 col-md-2">
+        <label for="channel" class="form-label small">Kanal</label>
+        <select id="channel" name="channel" class="form-select">
+            <option value="">Tümü</option>
+            @foreach (var channel in Enum.GetValues<OrderChannel>())
+            {
+                <option value="@channel" selected="@(filter.Channel == channel)">@OrderLabels.Channel(channel)</option>
+            }
+        </select>
+    </div>
+    <div class="col-12 col-md-2">
+        <button type="submit" class="btn btn-outline-secondary w-100">Filtrele</button>
+    </div>
+</form>
+
+@if (Model.Result.Content.Count == 0)
+{
+    <p class="text-body-secondary">Filtreye uyan sipariş yok.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Sipariş no</th><th>Tarih</th><th>Kanal</th><th>Müşteri</th><th>Ödeme</th>
+                    <th class="text-end">Ürün</th><th class="text-end">Tutar</th><th>Durum</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var order in Model.Result.Content)
+                {
+                    <tr>
+                        <td><a asp-action="Detail" asp-route-id="@order.Id">@order.OrderNumber</a></td>
+                        <td class="text-nowrap">@Display.Date(order.PlacedAt)</td>
+                        <td>@OrderLabels.Channel(order.Channel)</td>
+                        <td>@order.CustomerName</td>
+                        <td>@OrderLabels.Payment(order.PaymentMethod)</td>
+                        <td class="text-end">@order.ItemCount</td>
+                        <td class="text-end text-nowrap">@Display.Money(order.Total)</td>
+                        <td><span class="badge @OrderLabels.StatusBadge(order.Status)">@OrderLabels.Status(order.Status)</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_Pager" model="Model.Pager" />
+}

@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>ecommerce-admin-7c2f4a</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ECommerce.AdminPanel.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+    <PackageReference Include="NSwag.ApiDescription.Client" Version="14.6.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <!-- API client'ı derlemede API projesinin ürettiği OpenAPI dokümanından üretilir (obj/ altına yazılır). -->
+  <ItemGroup>
+    <OpenApiReference Include="..\ECommerce.API\openapi\ecommerce-api.json"
+                      CodeGenerator="NSwagCSharp"
+                      Namespace="ECommerce.AdminPanel.Api"
+                      ClassName="{controller}Client"
+                      Link="Api\ecommerce-api.json">
+      <Options>/OperationGenerationMode:MultipleClientsFromOperationId /JsonLibrary:SystemTextJson /GenerateClientInterfaces:true /UseBaseUrl:false /GenerateNullableReferenceTypes:true /GenerateOptionalPropertiesAsNullable:true /DateTimeType:System.DateTimeOffset /ArrayType:System.Collections.Generic.IReadOnlyList /ArrayInstanceType:System.Collections.Generic.List /GenerateDtoTypes:true /ExceptionClass:ApiException</Options>
+    </OpenApiReference>
+  </ItemGroup>
+
+</Project>

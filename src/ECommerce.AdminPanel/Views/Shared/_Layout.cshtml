@@ -1,0 +1,65 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] · ECommerce Yönetim</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" asp-controller="Home" asp-action="Index">ECommerce Yönetim</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-nav"
+                    aria-controls="main-nav" aria-expanded="false" aria-label="Menüyü aç">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="main-nav">
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="Index">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Orders" asp-action="Index">Siparişler</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Products" asp-action="Index">Ürünler</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Categories" asp-action="Index">Kategoriler</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Brands" asp-action="Index">Markalar</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="TrendyolListings" asp-action="Index">Trendyol</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Sync" asp-action="Index">Senkron</a>
+                        </li>
+                    </ul>
+                    <div class="d-flex align-items-center gap-2">
+                        <a class="nav-link text-light" asp-controller="Account" asp-action="ChangePassword">@User.Identity.Name</a>
+                        <form method="post" asp-controller="Account" asp-action="Logout">
+                            <button type="submit" class="btn btn-sm btn-outline-light">Çıkış</button>
+                        </form>
+                    </div>
+                }
+            </div>
+        </div>
+    </nav>
+
+    <main class="container-fluid py-4" role="main">
+        <partial name="_Flash" />
+        @RenderBody()
+    </main>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

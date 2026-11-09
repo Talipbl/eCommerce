@@ -1,0 +1,45 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 15px;
+  }
+}
+
+body {
+  min-height: 100vh;
+  background-color: var(--bs-tertiary-bg);
+}
+
+/* Kategori ağacı: girinti satır içi stil yerine sınıfla verilir (CSP style-src 'self'). */
+.category-tree .depth-1 { padding-left: 2.5rem; }
+.category-tree .depth-2 { padding-left: 4rem; }
+.category-tree .depth-3 { padding-left: 5.5rem; }
+.category-tree .depth-4 { padding-left: 7rem; }
+.category-tree .depth-5 { padding-left: 8.5rem; }
+
+.product-thumb {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+}
+
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+  padding: 0;
+  list-style: none;
+}
+
+.image-grid li {
+  cursor: grab;
+}
+
+.image-grid img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+}

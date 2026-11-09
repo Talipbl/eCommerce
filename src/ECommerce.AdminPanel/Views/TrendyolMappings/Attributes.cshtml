@@ -1,0 +1,110 @@
+@model AttributeMappingPage
+@{
+    ViewData["Title"] = $"{Model.Category.LocalName} — Trendyol özellikleri";
+    ViewData["TrendyolTab"] = "categories";
+}
+
+<h1 class="h3 mb-3">Trendyol</h1>
+<partial name="_TrendyolNav" />
+
+<h2 class="h5 mb-1">@Model.Category.LocalName → @Model.Category.ExternalName</h2>
+<p class="text-body-secondary small">
+    <strong>Sabit değer:</strong> kategorideki tüm ürünlere aynı değer gider (ör. Materyal: Pamuk).
+    <strong>Varyant özelliği:</strong> varyantın yerel özelliği (ör. Beden) Trendyol değerine çevrilir; eşleşmeyen değerde sabit değer kullanılır.
+    Trendyol değerini listeden seçin veya adını yazın.
+</p>
+
+<form method="post" asp-action="Attributes" asp-route-categoryId="@Model.Category.LocalId" asp-route-all="@Model.ShowAll" novalidate>
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+    @for (var i = 0; i < Model.Attributes.Count; i++)
+    {
+        var item = Model.Attributes[i];
+        var definition = item.Attribute;
+        var row = Model.Rows[i];
+        var isVariant = !string.IsNullOrWhiteSpace(row.LocalAttributeName);
+
+        <fieldset class="card mb-2">
+            <div class="card-body py-2">
+                <legend class="h6 mb-2">
+                    @definition.Name
+                    @if (definition.Required)
+                    {
+                        <span class="badge text-bg-danger">Zorunlu</span>
+                    }
+                    @if (definition.Varianter)
+                    {
+                        <span class="badge text-bg-info">Varyant belirler</span>
+                    }
+                    @if (definition.AllowCustom)
+                    {
+                        <span class="badge text-bg-light border">Serbest değer olur</span>
+                    }
+                    @if (definition.Required && row.IsEmpty)
+                    {
+                        <span class="badge text-bg-warning">Eşlenmedi</span>
+                    }
+                </legend>
+
+                <input type="hidden" name="rows[@i].ExternalAttributeId" value="@definition.Id" />
+                @if (item.Values.Count > 0)
+                {
+                    <datalist id="@item.DataListId">
+                        @foreach (var value in item.Values)
+                        {
+                            <option value="@value.Value"></option>
+                        }
+                    </datalist>
+                }
+
+                <div class="row g-2">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label small" for="rows_@(i)_LocalAttributeName">Yerel varyant özelliği</label>
+                        <input id="rows_@(i)_LocalAttributeName" name="rows[@i].LocalAttributeName" value="@row.LocalAttributeName" class="form-control form-control-sm"
+                               placeholder="Boşsa sabit değer" />
+                        <div class="form-text">Yazıp kaydedince değer eşleme satırları açılır.</div>
+                    </div>
+                    <div class="col-12 col-md-8">
+                        <label class="form-label small" for="rows_@(i)_DefaultValue">@(isVariant ? "Eşleşmeyen değerde" : "Sabit değer")</label>
+                        <input id="rows_@(i)_DefaultValue" name="rows[@i].DefaultValue" value="@row.DefaultValue" class="form-control form-control-sm"
+                               list="@(item.Values.Count > 0 ? item.DataListId : null)" autocomplete="off" />
+                        <span class="invalid-feedback d-block" data-valmsg-for="Rows[@i].DefaultValue">@ViewData.ModelState[$"Rows[{i}].DefaultValue"]?.Errors.FirstOrDefault()?.ErrorMessage</span>
+                    </div>
+                </div>
+
+                @if (isVariant)
+                {
+                    <div class="mt-2">
+                        <div class="small text-body-secondary mb-1">@row.LocalAttributeName değerleri → Trendyol</div>
+                        @for (var j = 0; j < row.Values.Count; j++)
+                        {
+                            var value = row.Values[j];
+                            <div class="row g-2 mb-1">
+                                <div class="col-5 col-md-4">
+                                    <input name="rows[@i].Values[@j].LocalValue" value="@value.LocalValue" class="form-control form-control-sm" placeholder="Yerel (ör. M)"
+                                           aria-label="@row.LocalAttributeName yerel değeri" />
+                                </div>
+                                <div class="col-7 col-md-8">
+                                    <input name="rows[@i].Values[@j].Value" value="@value.Value" class="form-control form-control-sm" placeholder="Trendyol değeri"
+                                           list="@(item.Values.Count > 0 ? item.DataListId : null)" autocomplete="off" aria-label="Trendyol değeri" />
+                                    <span class="invalid-feedback d-block" data-valmsg-for="Rows[@i].Values[@j].Value">@ViewData.ModelState[$"Rows[{i}].Values[{j}].Value"]?.Errors.FirstOrDefault()?.ErrorMessage</span>
+                                </div>
+                            </div>
+                        }
+                        <div class="form-text">Daha fazla satır için kaydedin; boş satırlar atlanır.</div>
+                    </div>
+                }
+            </div>
+        </fieldset>
+    }
+
+    <div class="d-flex flex-wrap gap-2 align-items-center mt-3">
+        <button type="submit" class="btn btn-primary">Eşlemeyi kaydet</button>
+        @if (!Model.ShowAll && Model.HiddenOptionalCount > 0)
+        {
+            <a class="btn btn-link" asp-action="Attributes" asp-route-categoryId="@Model.Category.LocalId" asp-route-all="true">
+                İsteğe bağlı @Model.HiddenOptionalCount özelliği de göster
+            </a>
+        }
+    </div>
+</form>

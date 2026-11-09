@@ -19,8 +19,8 @@ public class ProductsController(IProductAdminService products, IProductImageServ
         await products.ListAsync(new ProductAdminQuery(search, categoryId, brandId, isActive, page, size), cancellationToken);
 
     [HttpGet("{id:int}")]
-    public async Task<IActionResult> Get(int id, CancellationToken cancellationToken) =>
-        this.ToActionResult(await products.GetAsync(id, cancellationToken), Ok);
+    public async Task<ActionResult<ProductDetailDto>> Get(int id, CancellationToken cancellationToken) =>
+        this.ToOk(await products.GetAsync(id, cancellationToken));
 
     [HttpPost]
     [ProducesResponseType<ProductDetailDto>(StatusCodes.Status201Created)]
@@ -29,46 +29,47 @@ public class ProductsController(IProductAdminService products, IProductImageServ
             p => CreatedAtAction(nameof(Get), new { id = p.Id, version = "1" }, p));
 
     [HttpPut("{id:int}")]
-    public async Task<IActionResult> Update(int id, UpdateProductRequest request, CancellationToken cancellationToken) =>
-        this.ToActionResult(await products.UpdateAsync(id, request, cancellationToken), Ok);
+    public async Task<ActionResult<ProductDetailDto>> Update(int id, UpdateProductRequest request, CancellationToken cancellationToken) =>
+        this.ToOk(await products.UpdateAsync(id, request, cancellationToken));
 
     [HttpDelete("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken) =>
         this.ToActionResult(await products.DeleteAsync(id, cancellationToken), _ => NoContent());
 
     [HttpPost("{id:int}/publish")]
-    public async Task<IActionResult> Publish(int id, CancellationToken cancellationToken) =>
-        this.ToActionResult(await products.PublishAsync(id, cancellationToken), Ok);
+    public async Task<ActionResult<ProductDetailDto>> Publish(int id, CancellationToken cancellationToken) =>
+        this.ToOk(await products.PublishAsync(id, cancellationToken));
 
     [HttpPost("{id:int}/unpublish")]
-    public async Task<IActionResult> Unpublish(int id, CancellationToken cancellationToken) =>
-        this.ToActionResult(await products.UnpublishAsync(id, cancellationToken), Ok);
+    public async Task<ActionResult<ProductDetailDto>> Unpublish(int id, CancellationToken cancellationToken) =>
+        this.ToOk(await products.UnpublishAsync(id, cancellationToken));
 
     [HttpPost("{id:int}/variants")]
-    public async Task<IActionResult> AddVariant(int id, VariantInput request, CancellationToken cancellationToken) =>
-        this.ToActionResult(await products.AddVariantAsync(id, request, cancellationToken), Ok);
+    public async Task<ActionResult<ProductDetailDto>> AddVariant(int id, VariantInput request, CancellationToken cancellationToken) =>
+        this.ToOk(await products.AddVariantAsync(id, request, cancellationToken));
 
     [HttpPut("{id:int}/variants/{variantId:int}")]
-    public async Task<IActionResult> UpdateVariant(int id, int variantId, UpdateVariantRequest request, CancellationToken cancellationToken) =>
-        this.ToActionResult(await products.UpdateVariantAsync(id, variantId, request, cancellationToken), Ok);
+    public async Task<ActionResult<ProductDetailDto>> UpdateVariant(int id, int variantId, UpdateVariantRequest request, CancellationToken cancellationToken) =>
+        this.ToOk(await products.UpdateVariantAsync(id, variantId, request, cancellationToken));
 
     [HttpDelete("{id:int}/variants/{variantId:int}")]
-    public async Task<IActionResult> RemoveVariant(int id, int variantId, CancellationToken cancellationToken) =>
-        this.ToActionResult(await products.RemoveVariantAsync(id, variantId, cancellationToken), Ok);
+    public async Task<ActionResult<ProductDetailDto>> RemoveVariant(int id, int variantId, CancellationToken cancellationToken) =>
+        this.ToOk(await products.RemoveVariantAsync(id, variantId, cancellationToken));
 
     [HttpPost("{id:int}/images")]
     [RequestSizeLimit(ProductImageService.MaxFileSize + 64 * 1024)]
-    public async Task<IActionResult> UploadImage(int id, IFormFile file, [FromForm] string? altText, CancellationToken cancellationToken)
+    public async Task<ActionResult<ProductDetailDto>> UploadImage(int id, IFormFile file, [FromForm] string? altText, CancellationToken cancellationToken)
     {
         await using var stream = file.OpenReadStream();
-        return this.ToActionResult(await images.UploadAsync(id, stream, file.ContentType, file.Length, altText, cancellationToken), Ok);
+        return this.ToOk(await images.UploadAsync(id, stream, file.ContentType, file.Length, altText, cancellationToken));
     }
 
     [HttpDelete("{id:int}/images/{imageId:int}")]
-    public async Task<IActionResult> DeleteImage(int id, int imageId, CancellationToken cancellationToken) =>
-        this.ToActionResult(await images.DeleteAsync(id, imageId, cancellationToken), Ok);
+    public async Task<ActionResult<ProductDetailDto>> DeleteImage(int id, int imageId, CancellationToken cancellationToken) =>
+        this.ToOk(await images.DeleteAsync(id, imageId, cancellationToken));
 
     [HttpPut("{id:int}/images/order")]
-    public async Task<IActionResult> ReorderImages(int id, ReorderImagesRequest request, CancellationToken cancellationToken) =>
-        this.ToActionResult(await images.ReorderAsync(id, request.ImageIds, cancellationToken), Ok);
+    public async Task<ActionResult<ProductDetailDto>> ReorderImages(int id, ReorderImagesRequest request, CancellationToken cancellationToken) =>
+        this.ToOk(await images.ReorderAsync(id, request.ImageIds, cancellationToken));
 }

@@ -1,0 +1,58 @@
+@model SyncLogPage
+@{
+    ViewData["Title"] = "Senkron logu";
+    ViewData["SyncTab"] = "logs";
+}
+
+<partial name="_SyncNav" />
+
+<form method="get" asp-action="Logs" class="row g-2 align-items-end mb-3">
+    <div class="col-6 col-md-4">
+        <label for="operation" class="form-label small">İşlem</label>
+        <select id="operation" name="operation" class="form-select">
+            <option value="">Tümü</option>
+            @foreach (var operation in Enum.GetValues<SyncOperation>())
+            {
+                <option value="@operation" selected="@(Model.Operation == operation)">@SyncLabels.Operation(operation)</option>
+            }
+        </select>
+    </div>
+    <div class="col-6 col-md-3">
+        <label for="succeeded" class="form-label small">Sonuç</label>
+        <select id="succeeded" name="succeeded" class="form-select">
+            <option value="">Tümü</option>
+            <option value="false" selected="@(Model.Succeeded == false)">Hatalı</option>
+            <option value="true" selected="@(Model.Succeeded == true)">Başarılı</option>
+        </select>
+    </div>
+    <div class="col-12 col-md-2">
+        <button type="submit" class="btn btn-outline-secondary w-100">Filtrele</button>
+    </div>
+</form>
+
+@if (Model.Result.Content.Count == 0)
+{
+    <p class="text-body-secondary">Kayıt yok.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-sm align-middle">
+            <thead><tr><th>Zaman</th><th>Pazaryeri</th><th>İşlem</th><th>Referans</th><th>Sonuç</th><th>Mesaj</th></tr></thead>
+            <tbody>
+                @foreach (var log in Model.Result.Content)
+                {
+                    <tr>
+                        <td class="text-nowrap small">@Display.Date(log.OccurredAt)</td>
+                        <td>@log.Marketplace</td>
+                        <td>@SyncLabels.Operation(log.Operation)</td>
+                        <td class="small">@log.Reference</td>
+                        <td><span class="badge @(log.Succeeded ? "text-bg-success" : "text-bg-danger")">@(log.Succeeded ? "Başarılı" : "Hatalı")</span></td>
+                        <td class="small">@log.Message</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_Pager" model="Model.Pager" />
+}
